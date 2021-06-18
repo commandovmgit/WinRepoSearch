@@ -1,0 +1,54 @@
+- RepositoryId: WinGet
+  RepositoryName: WinGet
+  Website: https://github.com/microsoft/winget-pkgs
+  SupportEmail: opencode@microsoft.com
+  SupportChat: null
+  Notes: null
+  SearchCmd: "winget search {0}"
+  InstallCmd: "winget install {0}"
+  ListCmd: "winget list {0}"
+  InfoCmd: "winget show {0}"
+  AppNameColumn: Name 
+  AppIdColumn: Id
+  AppVersionColumn: Version
+  AppAfterVersionColumn: Match
+  InfoPublisherHeader: "Publisher: "
+  InfoDescriptionHeader: "Description: "
+  InfoWebsiteHeader: "Homepage: "
+  InfoNotesHeader: "License: "
+
+- RepositoryId: Choco
+  RepositoryName: Chocolatey
+  Website: https://chocolatey.org
+  SupportEmail: null
+  SupportChat: null
+  Notes: null
+  SearchCmd: "choco search {0}"
+  InstallCmd: "cinst {0} -y"
+  ListCmd: "choco list {0}"
+  InfoCmd: "choco info {0}"
+  AppNameRegex: ^\s*([^\s]*)
+  AppIdRegex: ^\s*([^\s]*)
+  AppVersionRegex: ^\s*[^\s]*\s([^\s]*)
+  InfoPublisherHeader: null
+  InfoDescriptionHeader: "Summary: "
+  InfoWebsiteHeader: "Software Site: "
+  InfoNotesHeader: "Description: "
+
+- RepositoryId: Scoop
+  RepositoryName: Scoop
+  Website: https://scoop.sh
+  SupportEmail: null
+  SupportChat: null
+  Notes: null
+  SearchCmd: "scoop search {0}"
+  InstallCmd: "scoop install {0}"
+  ListCmd: "scoop list {0}"
+  InfoCmd: "scoop info {0}"
+  AppNameRegex: ^\s*([^\s]*)
+  AppIdRegex: ^\s*([^\s]*)
+  AppVersionRegex: ^\s*[^\s]*\s\(([^)]*)\)
+  InfoPublisherHeader: null
+  InfoDescriptionHeader: "Description: "
+  InfoWebsiteHeader: "Website: "
+  InfoNotesHeader: "License: "

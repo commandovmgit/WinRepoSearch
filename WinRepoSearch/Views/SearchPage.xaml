@@ -1,0 +1,189 @@
+﻿<Page
+    x:Class="WinRepoSearch.Views.SearchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:behaviors="using:WinRepoSearch.Behaviors"
+    behaviors:NavigationViewHeaderBehavior.HeaderMode="Never"
+    xmlns:models="using:WinRepoSearch.Core.Models"
+    xmlns:views="using:WinRepoSearch.Views"
+    mc:Ignorable="d"
+    x:Name="SP"
+    Style="{StaticResource PageStyle}">
+    <Page.Resources>
+        <DataTemplate x:Key="ItemTemplate" x:DataType="models:SearchResult">
+            <Border BorderThickness="0, 0, 0, 1" 
+                    BorderBrush="{ThemeResource ListBoxBorderThemeBrush}" 
+                    Margin="2,2,2,8">
+                <Grid Height="Auto">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!--<FontIcon
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    FontSize="32"
+                    Glyph="{x:Bind Symbol}"
+                    AutomationProperties.Name="{x:Bind SymbolName}" />-->
+                    <StackPanel
+                    Grid.Column="1"
+                    Margin="{StaticResource SmallLeftMargin}"
+                    VerticalAlignment="Top">
+                        <RichTextBlock>
+                            <Paragraph>
+                                <InlineUIContainer>
+                                    <TextBlock Style="{StaticResource ListTitleStyle}" Text="{Binding AppName}" Foreground="{ThemeResource SystemColorControlAccentBrush}"/>
+                                </InlineUIContainer>
+                                <LineBreak/> (id:
+                                <InlineUIContainer>
+                                    <TextBlock Style="{StaticResource ListSubTitleStyle}" Text="{Binding AppId}" FontStyle="Italic" />
+                                </InlineUIContainer> )
+                            </Paragraph>
+                        </RichTextBlock>
+                        <RichTextBlock Margin="8">
+                            <Paragraph>
+                                <InlineUIContainer>
+                                    <RichTextBlock Style="{StaticResource ListSubTitleStyle}">
+                                        <Paragraph>
+                                            Version:
+                                            <Run Text="{Binding AppVersion}" FontWeight="Bold"/>
+                                            <Run Text="•" Foreground="{ThemeResource SystemColorControlAccentBrush}"/>
+                                            Repo:
+                                            <Run Text="{Binding Repo.RepositoryName}" FontWeight="Bold"/>
+                                        </Paragraph>
+                                    </RichTextBlock>
+                                </InlineUIContainer>
+                            </Paragraph>
+                            <Paragraph>
+                                <Hyperlink NavigateUri="{Binding PublisherWebsite}">
+                                    <Run Text="{Binding PublisherName}"/> Website
+                                </Hyperlink>
+                            </Paragraph>
+                        </RichTextBlock>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DetailsTemplate">
+            <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <views:SearchDetailControl ListDetailsMenuItem="{Binding}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LogTemplate">
+            <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <views:LogControl ViewModel="{Binding ElementName=SP, Path=ViewModel}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="NoSelectionContentTemplate">
+            <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <views:LogControl ViewModel="{Binding ElementName=SP, Path=ViewModel}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ListHeaderTemplate">
+            <Grid Height="40">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource ListTitleStyle}"
+                    Text="{Binding}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="MinimalListHeaderTemplate">
+            <Grid Height="40">
+                <TextBlock
+                    Margin="96,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource ListTitleStyle}"
+                    Text="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid x:Name="ContentArea">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <!--641 is the default CompactModeThresholdWidth in NavigationView -->
+                        <AdaptiveTrigger MinWindowWidth="641" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ListDetailsViewControl.ListHeaderTemplate" Value="{StaticResource ListHeaderTemplate}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Border Grid.Row="0"
+                BorderBrush="{ThemeResource TextBoxBorderThemeBrush}"
+                BorderThickness="{ThemeResource ComboBoxDropdownBorderThickness}">
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ComboBox Grid.Column="0"
+                          ItemsSource="{x:Bind ViewModel.Repositories}"
+                          Text="Repositories">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:Repository">
+                            <CheckBox Content="{x:Bind RepositoryName}"
+                                      CommandParameter="{x:Bind RepositoryId}"
+                                      IsChecked="{x:Bind IsEnabled, Mode=TwoWay}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBox 
+                    x:Name="SearchTermBox"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    VerticalAlignment="Center"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    KeyUp="TextBox_KeyUp"
+                    />
+                <Button
+                    x:Name="SearchButton"
+                    Grid.Column="2"
+                    BorderThickness="0"
+                    KeyboardAcceleratorPlacementMode="Auto"
+                    Command="{x:Bind ViewModel.PerformSearch}"
+                    CommandParameter="{x:Bind ViewModel}">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Enter" />
+                    </Button.KeyboardAccelerators>
+                    <FontIcon
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Glyph="&#xF6FA;" />
+                </Button>
+            </Grid>
+        </Border>
+        <controls:ListDetailsView
+            Grid.Row="1"
+            x:Uid="Search"
+            x:Name="ListDetailsViewControl"
+            BackButtonBehavior="Automatic"
+            BorderBrush="Transparent"            
+            DetailsTemplate="{StaticResource DetailsTemplate}"
+            ItemsSource="{x:Bind ViewModel.SearchResults}"
+            ItemTemplate="{StaticResource ItemTemplate}"
+            ListHeaderTemplate="{StaticResource MinimalListHeaderTemplate}"
+            NoSelectionContentTemplate="{StaticResource NoSelectionContentTemplate}"
+            SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
+            ViewStateChanged="OnViewStateChanged"
+            Background="{ThemeResource SystemControlPageBackgroundChromeLowBrush}" />
+    </Grid>
+</Page>

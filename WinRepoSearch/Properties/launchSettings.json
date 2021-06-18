@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WinRepoSearch": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

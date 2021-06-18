@@ -19,7 +19,9 @@ namespace WinRepoSearch.Activation
 
         protected override async Task HandleInternalAsync(LaunchActivatedEventArgs args)
         {
-            _navigationService.NavigateTo(typeof(SearchViewModel).FullName, args.Arguments);
+            _navigationService.NavigateTo(
+                typeof(SearchViewModel).FullName ?? "WinRepoSearch.ViewModels.SearchViewModel", 
+                args.Arguments);
             await Task.CompletedTask;
         }
 

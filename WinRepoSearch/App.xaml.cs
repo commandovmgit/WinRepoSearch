@@ -1,5 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 
@@ -21,6 +24,8 @@ namespace WinRepoSearch
 
         public App()
         {
+            AppCenter.Start("1f00432d-26a9-4bd8-86f3-552be7829da0",
+                   typeof(Analytics), typeof(Crashes));
             InitializeComponent();
             UnhandledException += App_UnhandledException;
             Ioc.Default.ConfigureServices(ConfigureServices());
@@ -35,7 +40,7 @@ namespace WinRepoSearch
         protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             base.OnLaunched(args);
-            var activationService = Ioc.Default.GetService<IActivationService>();
+            var activationService = Ioc.Default.GetService<IActivationService>()!;
             await activationService.ActivateAsync(args);
         }
 

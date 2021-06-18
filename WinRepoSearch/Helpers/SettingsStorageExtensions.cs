@@ -23,12 +23,14 @@ namespace WinRepoSearch.Helpers
         public static async Task SaveAsync<T>(this StorageFolder folder, string name, T content)
         {
             var file = await folder.CreateFileAsync(GetFileName(name), CreationCollisionOption.ReplaceExisting);
-            var fileContent = await Json.StringifyAsync(content);
+            var fileContent = content is not null 
+                ? await Json.StringifyAsync(content)
+                : null;
 
             await FileIO.WriteTextAsync(file, fileContent);
         }
 
-        public static async Task<T> ReadAsync<T>(this StorageFolder folder, string name)
+        public static async Task<T?> ReadAsync<T>(this StorageFolder folder, string name)
         {
             if (!File.Exists(Path.Combine(folder.Path, GetFileName(name))))
             {
@@ -43,6 +45,8 @@ namespace WinRepoSearch.Helpers
 
         public static async Task SaveAsync<T>(this ApplicationDataContainer settings, string key, T value)
         {
+            if (value is null) return;
+
             settings.SaveString(key, await Json.StringifyAsync(value));
         }
 
@@ -51,16 +55,13 @@ namespace WinRepoSearch.Helpers
             settings.Values[key] = value;
         }
 
-        public static async Task<T> ReadAsync<T>(this ApplicationDataContainer settings, string key)
+        public static async Task<T?> ReadAsync<T>(this ApplicationDataContainer settings, string key)
         {
-            object obj = null;
+            object? obj = null;
 
-            if (settings.Values.TryGetValue(key, out obj))
-            {
-                return await Json.ToObjectAsync<T>((string)obj);
-            }
-
-            return default;
+            return settings.Values.TryGetValue(key, out obj) 
+                ? await Json.ToObjectAsync<T>((string)obj) 
+                : default;
         }
 
         public static async Task<StorageFile> SaveFileAsync(this StorageFolder folder, byte[] content, string fileName, CreationCollisionOption options = CreationCollisionOption.ReplaceExisting)

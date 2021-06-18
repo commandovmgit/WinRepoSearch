@@ -11,16 +11,18 @@ namespace WinRepoSearch.Behaviors
 {
     public class NavigationViewHeaderBehavior : Behavior<NavigationView>
     {
-        private static NavigationViewHeaderBehavior _current;
-        private Page _currentPage;
+        private static NavigationViewHeaderBehavior _current = NavigationViewHeaderBehavior.Empty;
+        private Page? _currentPage;
 
-        public DataTemplate DefaultHeaderTemplate { get; set; }
+        public DataTemplate? DefaultHeaderTemplate { get; set; }
 
         public object DefaultHeader
         {
             get { return GetValue(DefaultHeaderProperty); }
             set { SetValue(DefaultHeaderProperty, value); }
         }
+
+        public static NavigationViewHeaderBehavior Empty => new NavigationViewHeaderBehavior();
 
         public static readonly DependencyProperty DefaultHeaderProperty = DependencyProperty.Register("DefaultHeader", typeof(object), typeof(NavigationViewHeaderBehavior), new PropertyMetadata(null, (d, e) => _current.UpdateHeader()));
 
@@ -67,20 +69,20 @@ namespace WinRepoSearch.Behaviors
         {
             base.OnAttached();
             _current = this;
-            var navigationService = Ioc.Default.GetService<INavigationService>();
+            var navigationService = Ioc.Default.GetService<INavigationService>()!;
             navigationService.Navigated += OnNavigated;
         }
 
         protected override void OnDetaching()
         {
             base.OnDetaching();
-            var navigationService = Ioc.Default.GetService<INavigationService>();
+            var navigationService = Ioc.Default.GetService<INavigationService>()!;
             navigationService.Navigated -= OnNavigated;
         }
 
         private void OnNavigated(object sender, NavigationEventArgs e)
         {
-            var frame = sender as Frame;
+            var frame = (Frame)sender;
             if (frame.Content is Page page)
             {
                 _currentPage = page;
@@ -103,23 +105,9 @@ namespace WinRepoSearch.Behaviors
                 else
                 {
                     var headerFromPage = GetHeaderContext(_currentPage);
-                    if (headerFromPage != null)
-                    {
-                        AssociatedObject.Header = headerFromPage;
-                    }
-                    else
-                    {
-                        AssociatedObject.Header = DefaultHeader;
-                    }
+                    AssociatedObject.Header = headerFromPage != null ? headerFromPage : DefaultHeader;
 
-                    if (headerMode == NavigationViewHeaderMode.Always)
-                    {
-                        AssociatedObject.AlwaysShowHeader = true;
-                    }
-                    else
-                    {
-                        AssociatedObject.AlwaysShowHeader = false;
-                    }
+                    AssociatedObject.AlwaysShowHeader = headerMode == NavigationViewHeaderMode.Always;
                 }
             }
         }

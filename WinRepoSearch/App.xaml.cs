@@ -24,8 +24,8 @@ namespace WinRepoSearch
 
         public App()
         {
-            AppCenter.Start("1f00432d-26a9-4bd8-86f3-552be7829da0",
-                   typeof(Analytics), typeof(Crashes));
+            //AppCenter.Start("1f00432d-26a9-4bd8-86f3-552be7829da0",
+            //       typeof(Analytics), typeof(Crashes));
             InitializeComponent();
             UnhandledException += App_UnhandledException;
             Ioc.Default.ConfigureServices(ConfigureServices());
@@ -66,11 +66,11 @@ namespace WinRepoSearch
 
             // Views and ViewModels
             services.AddTransient<ShellPage>();
-            services.AddTransient<ShellViewModel>();
+            services.AddSingleton<ShellViewModel>();
 
-            services.AddTransient<SearchViewModel>();
+            services.AddSingleton<SearchViewModel>();
             services.AddTransient<SearchPage>();
-            services.AddTransient<SettingsViewModel>();
+            services.AddSingleton<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
             return services.BuildServiceProvider();
         }

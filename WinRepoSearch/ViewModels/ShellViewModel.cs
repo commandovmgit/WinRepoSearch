@@ -12,11 +12,12 @@ namespace WinRepoSearch.ViewModels
     public class ShellViewModel : ObservableRecipient
     {
         private bool _isBackEnabled;
-        private object _selected;
+        private object? _selected;
 
         public INavigationService NavigationService { get; }
 
         public INavigationViewService NavigationViewService { get; }
+        public SearchViewModel SearchViewModel { get; }
 
         public bool IsBackEnabled
         {
@@ -24,17 +25,21 @@ namespace WinRepoSearch.ViewModels
             set { SetProperty(ref _isBackEnabled, value); }
         }
 
-        public object Selected
+        public object? Selected
         {
             get { return _selected; }
             set { SetProperty(ref _selected, value); }
         }
 
-        public ShellViewModel(INavigationService navigationService, INavigationViewService navigationViewService)
+        public ShellViewModel(
+            INavigationService navigationService, 
+            INavigationViewService navigationViewService,
+            SearchViewModel searchViewModel)
         {
             NavigationService = navigationService;
             NavigationService.Navigated += OnNavigated;
             NavigationViewService = navigationViewService;
+            SearchViewModel = searchViewModel;
         }
 
         private void OnNavigated(object sender, NavigationEventArgs e)

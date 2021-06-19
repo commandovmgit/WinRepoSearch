@@ -15,8 +15,12 @@ namespace WinRepoSearch.Views
     {
         private readonly KeyboardAccelerator _altLeftKeyboardAccelerator = BuildKeyboardAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu);
         private readonly KeyboardAccelerator _backKeyboardAccelerator = BuildKeyboardAccelerator(VirtualKey.GoBack);
+        private SearchViewModel? _searchViewModel;
 
         public ShellViewModel ViewModel { get; }
+
+        public SearchViewModel SearchViewModel => 
+            _searchViewModel ??= Ioc.Default.GetService<SearchViewModel>()!;
 
         public ShellPage(ShellViewModel viewModel)
         {

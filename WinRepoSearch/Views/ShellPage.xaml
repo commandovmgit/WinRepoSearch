@@ -6,10 +6,16 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:helpers="using:WinRepoSearch.Helpers"
     xmlns:behaviors="using:WinRepoSearch.Behaviors"
-    xmlns:i="using:Microsoft.Xaml.Interactivity"
+    xmlns:i="using:Microsoft.Xaml.Interactivity" 
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls" 
+    xmlns:brushes="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:viewmodels="using:WinRepoSearch.ViewModels" xmlns:converters="using:WinRepoSearch.Converters"
     Loaded="OnLoaded"
+    DataContext="{x:Bind ViewModel}"
     mc:Ignorable="d">
-
+    <Page.Resources>
+        <converters:MaxHeightConverter x:Key="MaxHeightConverter"/>
+    </Page.Resources>
     <NavigationView
         x:Name="navigationView"
         IsBackButtonVisible="Visible"
@@ -26,7 +32,9 @@
             Or to use an IconElement instead of a Symbol see https://github.com/Microsoft/WindowsTemplateStudio/blob/release/docs/UWP/projectTypes/navigationpane.md
             Edit String/en-US/Resources.resw: Add a menu item title for each page
             -->
-            <NavigationViewItem x:Uid="Shell_Search" Icon="Document" helpers:NavHelper.NavigateTo="WinRepoSearch.ViewModels.SearchViewModel" />
+            <NavigationViewItem x:Uid="Shell_Search" 
+                                Icon="Document" 
+                                helpers:NavHelper.NavigateTo="WinRepoSearch.ViewModels.SearchViewModel" />
         </NavigationView.MenuItems>
         <NavigationView.HeaderTemplate>
             <DataTemplate>
@@ -55,6 +63,42 @@
         </i:Interaction.Behaviors>
         <Grid>
             <Frame x:Name="shellFrame" />
+            <controls:Loading x:Name="LoadingControl" 
+                              IsLoading="{x:Bind SearchViewModel.IsBusy, Mode=OneWay}" 
+                              VerticalAlignment="Stretch"
+                              VerticalContentAlignment="Center">
+                <controls:Loading.Background>
+                    <brushes:AcrylicBrush BackgroundSource="Backdrop"
+                              TintColor="Black"
+                              TintOpacity="0.2"/>
+                </controls:Loading.Background>
+                <Grid Padding="12" 
+                        VerticalAlignment="Stretch">
+                    <Grid 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Center"
+                        
+                        >
+                        <!-- MaxHeight="{Binding ElementName=Message, Path=Height, Converter={StaticResource MaxHeightConverter}, Mode=OneWay}" -->
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ProgressRing Grid.Column="0" 
+                                      IsActive="True" 
+                                      Foreground="{ThemeResource SystemColorControlAccentBrush}" 
+                                      Height="{Binding ElementName=Message, Path=Height, Converter={StaticResource MaxHeightConverter}, Mode=OneWay}" 
+                                      Width="{Binding ElementName=Message, Path=Height, Converter={StaticResource MaxHeightConverter}, Mode=OneWay}" 
+                                      VerticalAlignment="Center" 
+                                      VerticalContentAlignment="Center" />
+                        <TextBlock Grid.Column="1" x:Name="Message" Text="Executing..." 
+                                   Padding="8"
+                                   Foreground="{ThemeResource SystemColorHighlightTextColor}" 
+                                   Style="{ThemeResource SubheaderTextBlockStyle}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </controls:Loading>
         </Grid>
     </NavigationView>
 </Page>

@@ -6,79 +6,34 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     mc:Ignorable="d">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <AppBar Grid.Row="0" 
+                Width="Auto"
+                IsOpen="True"
+                IsSticky="True">
+            <AppBarButton                 
+                FontSize="32pt"
+                Icon="Download"
+                Content="Download"
+                Command="{x:Bind ListDetailsMenuItem.InstallCommand, Mode=OneWay}"
+                CommandParameter="{x:Bind ListDetailsMenuItem, Mode=OneWay}"/>
+        </AppBar>
     <ScrollViewer
+        Grid.Row="1"
         Name="ForegroundElement"
         HorizontalAlignment="Stretch"
         VerticalScrollMode="Enabled"
         Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
         IsTabStop="True">
-        <!--<StackPanel HorizontalAlignment="Left">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                --><!--<FontIcon
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    FontSize="48"
-                    Glyph="{x:Bind ListDetailsMenuItem.Symbol, Mode=OneWay}"
-                    AutomationProperties.Name="{x:Bind ListDetailsMenuItem.SymbolName, Mode=OneWay}"  />--><!--
-                <TextBlock
-                    Margin="{StaticResource SmallLeftMargin}"
-                    VerticalAlignment="Center"
-                    Text="{x:Bind ListDetailsMenuItem.AppName, Mode=OneTime}"
-                    Style="{ThemeResource TitleTextBlockStyle}" />
-            </StackPanel>
-            <StackPanel Name="block" Padding="0,15,0,0">
-                <TextBlock Text="Version" Style="{StaticResource DetailSubTitleStyle}" />
-
-                <TextBlock Text="{x:Bind ListDetailsMenuItem.AppVersion, Mode=OneWay}" Style="{StaticResource DetailBodyBaseMediumStyle}" />
-
-                <TextBlock
-                    Margin="{StaticResource SmallTopMargin}"
-                    Text="Published"
-                    Style="{StaticResource DetailSubTitleStyle}" />
-                <TextBlock Text="{x:Bind ListDetailsMenuItem.CreatedDate, Mode=OneWay}" Style="{StaticResource DetailBodyBaseMediumStyle}" />
-                <TextBlock
-                    Margin="{StaticResource SmallTopMargin}"
-                    Text="Publisher"
-                    Style="{StaticResource DetailSubTitleStyle}" />
-                <TextBlock Text="{x:Bind ListDetailsMenuItem.PublisherName, Mode=OneWay}" Style="{StaticResource DetailBodyBaseMediumStyle}" />
-                <TextBlock
-                    Margin="{StaticResource SmallTopMargin}"
-                    Text="Website"
-                    Style="{StaticResource DetailSubTitleStyle}" />
-                <TextBlock Style="{StaticResource DetailBodyBaseMediumStyle}">
-                    <Hyperlink NavigateUri="{x:Bind ListDetailsMenuItem.PublisherWebsite, Mode=OneWay}">Website</Hyperlink>
-                </TextBlock>
-
-                <TextBlock
-                    Margin="{StaticResource SmallTopMargin}"
-                    Text="Rating"
-                    Style="{StaticResource DetailSubTitleStyle}" />
-                <TextBlock Text="{x:Bind ListDetailsMenuItem.AppRating, Mode=OneWay}" Style="{StaticResource DetailBodyBaseMediumStyle}" />
-            </StackPanel>
-            <StackPanel Name="description" Padding="0,15,0,0">
-                <TextBlock
-                    Margin="{StaticResource MediumTopMargin}"
-                    Text="Description"
-                    Style="{StaticResource DetailSubTitleStyle}" />
-                <TextBlock
-                    Style="{StaticResource DetailBodyStyle}"
-                    Text="{x:Bind ListDetailsMenuItem.AppDescription, Mode=OneWay}" />
-            </StackPanel>
-            <StackPanel Name="notes" Padding="0,15,0,0" 
-                        Visibility="{x:Bind GetVisibility(ListDetailsMenuItem.Notes), Mode=OneWay}">
-                <TextBlock
-                    Margin="{StaticResource MediumTopMargin}"
-                    Text="Notes"
-                    Style="{StaticResource DetailSubTitleStyle}" />
-                <TextBlock
-                    Style="{StaticResource DetailBodyStyle}"
-                    Text="{x:Bind ListDetailsMenuItem.Notes, Mode=OneWay}" />
-            </StackPanel>
-        </StackPanel>-->
         <controls:MarkdownTextBlock 
             Padding="{StaticResource DetailPageMargin}"
             Text="{x:Bind ListDetailsMenuItem.Markdown, Mode=OneWay}"
             LinkClicked="MarkdownTextBlock_LinkClicked"
             />
     </ScrollViewer>
+    </Grid>
 </views:UserControlBase>

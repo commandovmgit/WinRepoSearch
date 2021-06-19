@@ -126,20 +126,17 @@ namespace WinRepoSearch.Core.Models
             return null;
         }
 
-        internal System.Threading.Tasks.Task<LogItem> Search(string searchTerm)
-        {
-            if (!IsEnabled)
-            {
-                return System.Threading.Tasks.Task.FromResult<LogItem> (LogItem.Empty);
-            }
+        internal Task<LogItem> Search(string searchTerm) => !IsEnabled
+                ? Task.FromResult(LogItem.Empty)
+                : ExecuteCommand(SearchCmd, searchTerm);
 
-            return ExecuteCommand(SearchCmd, searchTerm);
-        }
-
-        internal System.Threading.Tasks.Task<LogItem> GetInfo(SearchResult result)
+        internal Task<LogItem> GetInfo(SearchResult result)
             => ExecuteCommand(InfoCmd, result);
 
-        private async System.Threading.Tasks.Task<LogItem> ExecuteCommand<TParameter>(string? command, TParameter parameter)
+        internal Task<LogItem> Install(SearchResult result)
+            => ExecuteCommand(InstallCmd, result);
+
+        private async Task<LogItem> ExecuteCommand<TParameter>(string? command, TParameter parameter)
         {
             _ = command ?? throw new ArgumentNullException(nameof(command));
 
@@ -165,14 +162,20 @@ namespace WinRepoSearch.Core.Models
             {
                 CreateNoWindow = true,
                 LoadUserProfile = true,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                Verb="runas"
             };
 
             try
             {
                 var process = Process.Start(processInfo)!;
 
-                if (Task.WaitAny(new[] { process.WaitForExitAsync() }, TimeSpan.FromSeconds(30)) != -1)
+                var delay = Task.Delay(TimeSpan.FromSeconds(30));
+                var processTask = process.WaitForExitAsync();
+
+                var result = await Task.WhenAny(processTask, delay);
+
+                if (result == processTask)
                 {
                     var results = await process.StandardOutput.ReadToEndAsync();
 

@@ -8,11 +8,12 @@
     xmlns:behaviors="using:WinRepoSearch.Behaviors"
     behaviors:NavigationViewHeaderBehavior.HeaderMode="Never"
     xmlns:models="using:WinRepoSearch.Core.Models"
-    xmlns:views="using:WinRepoSearch.Views"
+    xmlns:views="using:WinRepoSearch.Views" xmlns:converters="using:WinRepoSearch.Converters"
     mc:Ignorable="d"
     x:Name="SP"
     Style="{StaticResource PageStyle}">
     <Page.Resources>
+        <converters:MustBeSearchResultConverter x:Key="MustBeSearchResultConverter"/>
         <DataTemplate x:Key="ItemTemplate" x:DataType="models:SearchResult">
             <Border BorderThickness="0, 0, 0, 1" 
                     BorderBrush="{ThemeResource ListBoxBorderThemeBrush}" 
@@ -68,9 +69,10 @@
             </Border>
         </DataTemplate>
 
-        <DataTemplate x:Key="DetailsTemplate">
+        <DataTemplate x:Key="DetailsTemplate" x:DataType="models:SearchResult">
             <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                <views:SearchDetailControl ListDetailsMenuItem="{Binding}" />
+                <views:SearchDetailControl ListDetailsMenuItem="{Binding Converter={StaticResource MustBeSearchResultConverter}}" 
+                                           SearchViewModel="{Binding ElementName=SP, Path=ViewModel}" />
             </Grid>
         </DataTemplate>
 

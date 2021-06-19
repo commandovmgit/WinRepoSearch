@@ -15,9 +15,12 @@ namespace WinRepoSearch.Core.Services
     public class SearchService : ISearchService
     {
         public ImmutableArray<Repository> Repositories { get; } = new();
+        public static SearchService? Instance { get; private set; }
 
         public SearchService()
         {
+            Instance = this;
+
             var filename = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "Repos.yaml");
             if (File.Exists(filename))
             {
@@ -54,6 +57,17 @@ namespace WinRepoSearch.Core.Services
             var repo = viewModel.Selected?.Repo;
 
             var result = await repo?.GetInfo(viewModel.Selected);
+
+            return result ?? LogItem.Empty;
+        }
+
+        public async Task<LogItem> PerformInstall(SearchResult? searchResult)
+        {
+            _ = searchResult ?? throw new ArgumentNullException(nameof(searchResult));
+
+            var repo = searchResult.Repo;
+
+            var result = await repo.Install(searchResult);
 
             return result ?? LogItem.Empty;
         }

@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using WinRepoSearch.Core.Models;
+using WinRepoSearch.ViewModels;
 
 namespace WinRepoSearch.Views
 {
@@ -13,13 +14,24 @@ namespace WinRepoSearch.Views
             get => (SearchResult)GetValue(ListDetailsMenuItemProperty);
             set => SetValue(ListDetailsMenuItemProperty, value);
         }
+        public SearchViewModel SearchViewModel {
+            get => (SearchViewModel)GetValue(SearchViewModelProperty);
+            set => SetValue(SearchViewModelProperty, value);
+        }
 
         public static readonly DependencyProperty ListDetailsMenuItemProperty =
             DependencyProperty.Register(
-                "ListDetailsMenuItem", 
-                typeof(SearchResult), 
-                typeof(SearchDetailControl), 
+                nameof(ListDetailsMenuItem),
+                typeof(SearchResult),
+                typeof(SearchDetailControl),
                 new PropertyMetadata(null, OnListDetailsMenuItemPropertyChanged));
+
+        public static readonly DependencyProperty SearchViewModelProperty =
+            DependencyProperty.Register(
+                nameof(SearchViewModel),
+                typeof(SearchViewModel),
+                typeof(SearchDetailControl),
+                new PropertyMetadata(null));
 
         public SearchDetailControl()
         {
@@ -28,8 +40,19 @@ namespace WinRepoSearch.Views
 
         private static void OnListDetailsMenuItemPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var control = (SearchDetailControl)d;
-            control.ForegroundElement.ChangeView(0, 0, 1);
+            if(d is SearchDetailControl control)
+            {
+                control.ForegroundElement.ChangeView(0, 0, 1);
+            }
+            else
+            {
+                return;
+            }
+
+            if(e.NewValue is not null && e.NewValue.GetType() != typeof(SearchResult))
+            {
+                control?.SetValue(e.Property, e.OldValue);
+            }
         }
 
         private void MarkdownTextBlock_LinkClicked(object sender, CommunityToolkit.WinUI.UI.Controls.LinkClickedEventArgs e)

@@ -1,10 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using WinRepoSearch.Core.Services;
 
 namespace WinRepoSearch.Core.Models
 {
@@ -23,6 +27,8 @@ namespace WinRepoSearch.Core.Models
         private string? publisherWebsite;
         private string? publisherContact;
         private string? notes;
+
+        public event Action<bool> IsBusy;
 
         public SearchResult(string resultId, Repository repo)
         {
@@ -82,31 +88,66 @@ namespace WinRepoSearch.Core.Models
         public string ResultId { get; }
         public Repository Repo { get; }
 
+        public static Func<SearchResult?, Task> ExecuteDownload =>
+            async result =>
+            {
+                if (result is null) throw new ArgumentNullException(nameof(result));
+
+                result.Busy();
+                try
+                {
+                    await SearchService.Instance!.PerformInstall(result);
+                }
+                finally
+                {
+                    result.Done();
+                }
+            };
+
+        private void Done()
+        {
+            IsBusy?.Invoke(false);
+        }
+
+        private void Busy()
+        {
+            IsBusy?.Invoke(true);
+        }
+
+        public AsyncRelayCommand<SearchResult> InstallCommand = new (
+            ExecuteDownload, 
+            _ => true
+            );
+
         public override string ToString()
         {
             return $"{AppName ?? Key} {AppVersion}";
         }
 
         public string Markdown => @$"
-# {AppName ?? Key ?? "<none>"} ({AppVersion ?? "<none>"})
+# 🔸 {AppName ?? Key ?? "<none>"} ({AppVersion ?? "<none>"})
 
 {AppDescription ?? "<none>"}
 
-* Publisher: **{PublisherName ?? "<none>"}**
-* Website: **[{PublisherWebsite ?? "<none>"}]({PublisherWebsite ?? ""})**
+{(string.IsNullOrWhiteSpace(PublisherName) ? "" : $"* 📰 Publisher: **{PublisherName}**")}
+{(string.IsNullOrWhiteSpace(PublisherWebsite) ? "" : $"* 🌐 Website: **[{PublisherWebsite}]({PublisherWebsite ?? ""})**")}
 
-## Notes
+## 📓 Notes
 
 {Notes?.Replace(Environment.NewLine, "\n\n") ?? "<none>"}
 
-## Links
+## 🔗 Links
 
-[Google](https://www.google.com/search?q={AppName.Replace(" ", "%20")}%20{AppVersion})
-[Bing](https://www.bing.com/search?q={AppName.Replace(" ", "%20")}%20{AppVersion})
-[Stack Overflow](https://www.stackoverflow.com/search?q={AppName.Replace(" ", "%20")})
-[GitHub](https://github.com/search?q=in%3A{AppName.Replace(" ", "%20")}&type=Repositories)
+🔍 [Google](https://www.google.com/search?q={AppName.Replace(" ", "%20")}%20{AppVersion}) {'\n'}
+🔍 [Bing](https://www.bing.com/search?q={AppName.Replace(" ", "%20")}%20{AppVersion}) {'\n'}
+🔍 [Stack Overflow](https://www.stackoverflow.com/search?q={AppName.Replace(" ", "%20")}) {'\n'}
+🔍 [GitHub](https://github.com/search?q=in%3A{AppName.Replace(" ", "%20")}&type=Repositories)
 
+---
+
+_**Results from {Repo.RepositoryName}**_
 ";
+
     }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }

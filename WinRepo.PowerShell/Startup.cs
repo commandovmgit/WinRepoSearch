@@ -4,8 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Models;
 using WinRepoSearch.Core.Services;
@@ -16,7 +18,13 @@ namespace WinRepo.PowerShell
 #nullable enable
     public class Startup : IStartup
     {
+        private readonly ISearchService? _searchService;
+
         public IServiceProvider? ServiceProvider { get; set; }
+
+        public ISearchService? SearchService
+            => _searchService ?? ServiceProvider?.GetRequiredService<ISearchService>();
+
 
         public Startup() { }
 

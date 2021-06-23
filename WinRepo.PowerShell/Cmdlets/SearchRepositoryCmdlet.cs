@@ -1,16 +1,18 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
 using WinRepoSearch.Core.Models;
 using WinRepoSearch.Core.Services;
 using WinRepoSearch.ViewModels;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
-using System.Linq;
 
-namespace WinRepo.PowerShell
+namespace WinRepo.PowerShell.Cmdlets
 {
     [Cmdlet(VerbsCommon.Search, "Repository")]
     [OutputType(typeof(SearchResult))]
@@ -43,7 +45,6 @@ namespace WinRepo.PowerShell
 
             ViewModel = ServiceHost.Services.GetRequiredService<SearchViewModel>();
             Logger.LogInformation("SearchRepositoryCmdlet.BeginProcessing: Created ViewModel.");
-
 
             base.BeginProcessing();
 
@@ -82,19 +83,28 @@ namespace WinRepo.PowerShell
                 .ToList()
                 .ForEach(r =>
                     r.IsEnabled =
-                        (RepoToSearch == DefaultRepos.All) ||
+                        RepoToSearch == DefaultRepos.All ||
                         r.RepositoryName.Equals(RepoToSearch.ToString(), StringComparison.OrdinalIgnoreCase)
                 );
 
             ViewModel.SearchTerm = $"{SearchTerm} --PSObject";
 
+            PerformSearchAsync().GetAwaiter().GetResult();
+
+            base.ProcessRecord();
+
+            Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Exit");
+        }
+
+        private async Task PerformSearchAsync()
+        {
             Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Before PerformSearchAsync");
             var results = Service.PerformSearchAsync(ViewModel);
             Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: After PerformSearchAsync");
 
             var enumerator = results.GetAsyncEnumerator();
 
-            while (enumerator.MoveNextAsync().Result)
+            while (await enumerator.MoveNextAsync())
             {
                 Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Moved Next");
 
@@ -104,20 +114,21 @@ namespace WinRepo.PowerShell
 
                 Logger.LogInformation($"Found {resultSet.Result.Count()} results in {resultSet.Result.FirstOrDefault()?.Repo.RepositoryName}");
 
-                base.WriteVerbose(string.Join(Environment.NewLine, resultSet.Log.Select(ii => $"{ii.Timestamp}: {ii.Message}")));
+                WriteVerbose(string.Join(Environment.NewLine, resultSet.Log.Select(ii => $"{ii.Timestamp}: {ii.Message}")));
 
-                base.WriteObject(resultSet);
+                WriteObject(resultSet);
                 Logger.LogInformation($"SearchRepositoryCmdlet.ProcessRecord: wrote: {resultSet}");
             }
-
-            base.ProcessRecord();
-
-            Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Exit");
         }
     }
 
+}
+
+namespace WinRepo
+{
     public enum DefaultRepos
     {
-        All,  WinGet, Chocolatey, Scoop
+        All, WinGet, Chocolatey, Scoop
     }
+
 }

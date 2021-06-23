@@ -64,5 +64,12 @@
 				"problemMatcher": "$msCompile"
 			}
 		]
+	},
+	"settings": {
+		"cSpell.words": [
+			"Cmdlet",
+			"Cmdlets",
+			"Repos"
+		]
 	}
 }

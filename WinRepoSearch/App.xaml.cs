@@ -5,7 +5,7 @@ using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-
+using System;
 using WinRepoSearch.Activation;
 using WinRepoSearch.Contracts.Services;
 using WinRepoSearch.Core.Contracts.Services;
@@ -18,6 +18,18 @@ using WinRepoSearch.Views;
 // To learn more about WinUI3, see: https://docs.microsoft.com/windows/apps/winui/winui3/.
 namespace WinRepoSearch
 {
+    public class Startup : IStartup
+    {
+        public IServiceProvider? ServiceProvider { get; set; }
+
+        public Startup() { }
+
+        public Startup(IServiceProvider serviceProvider)
+        {
+            ServiceProvider = serviceProvider;
+        }
+    }
+
     public partial class App : Application
     {
         public static Window MainWindow { get; set; } = new Window() { Title = "AppDisplayName".GetLocalized() };
@@ -31,7 +43,7 @@ namespace WinRepoSearch
             Ioc.Default.ConfigureServices(ConfigureServices());
         }
 
-        private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             // TODO WTS: Please log and handle the exception as appropriate to your scenario
             // For more info see https://docs.microsoft.com/windows/winui/api/microsoft.ui.xaml.unhandledexceptioneventargs
@@ -72,6 +84,9 @@ namespace WinRepoSearch
             services.AddTransient<SearchPage>();
             services.AddSingleton<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
+
+            services.AddSingleton<IStartup, Startup>();
+
             return services.BuildServiceProvider();
         }
     }

@@ -63,11 +63,7 @@ namespace WinRepoSearch.ViewModels
             set => SetProperty(ref _searchTerm, value);
         }
 
-        public ObservableCollection<Repository> Repositories
-        {
-            get => _repositories ?? new();
-            set => SetProperty(ref _repositories, value);
-        }
+        public ObservableCollection<Repository> Repositories => _repositories ??= new(_searchService.Repositories);
 
         public ObservableCollection<InnerItem> Log { get; } = new();
 
@@ -220,13 +216,6 @@ namespace WinRepoSearch.ViewModels
 
         public async void OnNavigatedTo(object? _)
         {
-            Repositories ??= new(_searchService.Repositories);
-
-            if (Repositories.Count is 0)
-            {
-                Repositories = new(_searchService.Repositories);
-            }
-
             if (SearchResults.Count == 0)
             {
                 await foreach (var (items, log) in _searchService.PerformSearchAsync(this))

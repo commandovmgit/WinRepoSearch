@@ -1,13 +1,14 @@
 - RepositoryId: WinGet
   RepositoryName: WinGet
+  Command: C:\Users\kingd\AppData\Local\Microsoft\WindowsApps\winget.exe
   Website: https://github.com/microsoft/winget-pkgs
   SupportEmail: opencode@microsoft.com
   SupportChat: null
   Notes: null
-  SearchCmd: "winget search {0}"
-  InstallCmd: "winget install {0}"
-  ListCmd: "winget list {0}"
-  InfoCmd: "winget show {0}"
+  SearchCmd: "search {0}"
+  InstallCmd: install {0}"
+  ListCmd: "list {0}"
+  InfoCmd: "show {0}"
   AppNameColumn: Name 
   AppIdColumn: Id
   AppVersionColumn: Version
@@ -19,14 +20,15 @@
 
 - RepositoryId: Choco
   RepositoryName: Chocolatey
+  Command: C:\ProgramData\chocolatey\bin\choco.exe
   Website: https://chocolatey.org
   SupportEmail: null
   SupportChat: null
   Notes: null
-  SearchCmd: "choco search {0}"
-  InstallCmd: "cinst {0} -y"
-  ListCmd: "choco list {0}"
-  InfoCmd: "choco info {0}"
+  SearchCmd: "search {0}"
+  InstallCmd: "install {0} -y"
+  ListCmd: "list {0}"
+  InfoCmd: "info {0}"
   AppNameRegex: ^\s*([^\s]*)
   AppIdRegex: ^\s*([^\s]*)
   AppVersionRegex: ^\s*[^\s]*\s([^\s]*)
@@ -37,14 +39,16 @@
 
 - RepositoryId: Scoop
   RepositoryName: Scoop
+  #Command: C:\Users\kingd\scoop\apps\scoop\current\bin\scoop.ps1
+  Command: C:\Users\kingd\scoop\shims\scoop.ps1
   Website: https://scoop.sh
   SupportEmail: null
   SupportChat: null
   Notes: null
-  SearchCmd: "scoop search {0}"
-  InstallCmd: "scoop install {0}"
-  ListCmd: "scoop list {0}"
-  InfoCmd: "scoop info {0}"
+  SearchCmd: "search {0}"
+  InstallCmd: "install {0}"
+  ListCmd: "list {0}"
+  InfoCmd: "info {0}"
   AppNameRegex: ^\s*([^\s]*)
   AppIdRegex: ^\s*([^\s]*)
   AppVersionRegex: ^\s*[^\s]*\s\(([^)]*)\)

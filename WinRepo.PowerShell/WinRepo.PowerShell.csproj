@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<AllowPublish>True</AllowPublish>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <PlatformTarget>x64</PlatformTarget>
+	  <DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\WinRepoSearch\Repos.yaml" Link="Repos.yaml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="7.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+		<PackageReference Include="Microsoft.WSMan.Runtime" Version="7.0.0" />
+		<PackageReference Include="System.Management.Automation" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WinRepoSearch.Core\WinRepoSearch.Core.csproj" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(AllowPublish)">
+		<Message Text="Target: $(Target)" />
+		<PropertyGroup>
+			<AllowPublish>False</AllowPublish>
+		</PropertyGroup>
+	  <Exec Command="pwsh -c { dotnet publish --no-restore -c Debug -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true  }" />
+	</Target>
+
+</Project>

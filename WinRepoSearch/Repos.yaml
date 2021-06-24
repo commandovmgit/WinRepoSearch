@@ -45,10 +45,10 @@
   SupportEmail: null
   SupportChat: null
   Notes: null
-  SearchCmd: "'{0}' search '{1}' --PSObject"
-  InstallCmd: "'{0}' install '{0}'"
-  ListCmd: "'{0}' list '{0}'"
-  InfoCmd: "'{0}' info '{0}'"
+  SearchCmd: "'search' '{0}' --PSObject"
+  InstallCmd: "'install' '{0}'"
+  ListCmd: "'list' '{0}'"
+  InfoCmd: "'info' '{0}'"
   AppNameRegex: ^\s*([^\s]*)
   AppIdRegex: ^\s*([^\s]*)
   AppVersionRegex: ^\s*[^\s]*\s\(([^)]*)\)

@@ -12,6 +12,28 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Cmdlets\SearchRepositoryCmdlet.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Scripts\Assemblies.ps1" />
+	  <None Remove="Scripts\Common.ps1" />
+	  <None Remove="Scripts\WinRepo.psm1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Scripts\Assemblies.ps1">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Scripts\Common.ps1">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Scripts\WinRepo.psm1">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Include="..\WinRepoSearch\Repos.yaml" Link="Repos.yaml">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
@@ -27,6 +49,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\WinRepoSearch.Core\WinRepoSearch.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Cmdlets\" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(AllowPublish)">

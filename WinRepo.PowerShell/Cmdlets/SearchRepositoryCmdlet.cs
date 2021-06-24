@@ -123,12 +123,3 @@ namespace WinRepo.PowerShell.Cmdlets
     }
 
 }
-
-namespace WinRepo
-{
-    public enum DefaultRepos
-    {
-        All, WinGet, Chocolatey, Scoop
-    }
-
-}

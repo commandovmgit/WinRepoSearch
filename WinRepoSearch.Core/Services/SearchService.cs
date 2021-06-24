@@ -22,6 +22,9 @@ namespace WinRepoSearch.Core.Services
 
         public SearchService(IServiceProvider serviceProvider, ILogger<SearchService> logger)
         {
+            _ = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _ = logger ?? throw new ArgumentNullException(nameof(logger));
+
             logger.LogInformation("SearchService.ctor(): Enter");
 
             Instance = this;
@@ -40,7 +43,7 @@ namespace WinRepoSearch.Core.Services
 
                 if (repos is not null)
                 {
-                    repos.ToList().ForEach(r => { 
+                    repos.ToList().ForEach(r => {
                         r.Logger = serviceProvider.GetService<ILogger<Repository>>()!;
                         r.ServiceProvider = serviceProvider.GetService<IStartup>()!.ServiceProvider ?? serviceProvider;
                     });
@@ -52,7 +55,7 @@ namespace WinRepoSearch.Core.Services
             }
             else
             {
-                logger.LogInformation($"SearchService.ctor(): File node found: {filename}");
+                logger.LogError($"SearchService.ctor(): File node found: {filename}");
             }
             Logger = logger;
             logger.LogInformation("SearchService.ctor(): Exit");

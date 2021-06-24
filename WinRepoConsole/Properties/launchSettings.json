@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WinRepoConsole": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

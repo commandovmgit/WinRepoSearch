@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="2" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2021-06-23" time="09:51:17">
+  <environment os-version="10.0.21390" platform="Microsoft Windows 10 Pro|C:\WINDOWS|\Device\Harddisk0\Partition3" nunit-version="2.5.8.0" user-domain="PAYTON-ROG" user="kingd" machine-name="PAYTON-ROG" clr-version="Unknown" cwd="C:\GitHub\WinRepoSearch" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="1.246" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="C:\GitHub\WinRepoSearch\WinRepo.PowerShell\test-scripts\Search-Repository.Tests.ps1" executed="True" result="Success" success="True" time="1.246" asserts="0" description="C:\GitHub\WinRepoSearch\WinRepo.PowerShell\test-scripts\Search-Repository.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Search-Repositories" executed="True" result="Success" success="True" time="0.8362" asserts="0" description="Search-Repositories">
+            <results>
+              <test-suite type="TestFixture" name="Search-Repositories.Search All for 'vscode'" executed="True" result="Success" success="True" time="0.4973" asserts="0" description="Search-Repositories.Search All for 'vscode'">
+                <results>
+                  <test-case description="should return results" name="Search-Repositories.Search All for 'vscode'.should return results" time="0.343" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Search-Repositories.Search Scoop for 'vscode'" executed="True" result="Success" success="True" time="0.7044" asserts="0" description="Search-Repositories.Search Scoop for 'vscode'">
+                <results>
+                  <test-case description="should return results" name="Search-Repositories.Search Scoop for 'vscode'.should return results" time="0.1058" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

@@ -39,7 +39,7 @@ namespace WinRepoConsole
             var viewModel = ServiceHost.Services.GetRequiredService<SearchViewModel>();
 
             var searchTerm = args.FirstOrDefault() ?? "vscode";
-            var repoToSearch = "Scoop";
+            var repoToSearch = "Chocolatey";
 
             Console.WriteLine($"SearchRepositoryCmdlet.ProcessRecord: Enter - SearchTerm: {searchTerm}, RepoToSearch: {repoToSearch}");
 

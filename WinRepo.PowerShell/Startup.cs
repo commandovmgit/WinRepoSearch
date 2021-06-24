@@ -18,12 +18,12 @@ namespace WinRepo.PowerShell
 #nullable enable
     public class Startup : IStartup
     {
-        private readonly ISearchService? _searchService;
+        private ISearchService? _searchService;
 
         public IServiceProvider? ServiceProvider { get; set; }
 
         public ISearchService? SearchService
-            => _searchService ?? ServiceProvider?.GetRequiredService<ISearchService>();
+            => _searchService ??= ServiceProvider?.GetRequiredService<ISearchService>();
 
 
         public Startup() { }
@@ -43,6 +43,7 @@ namespace WinRepo.PowerShell
 
             services.AddTransient<SearchViewModel>();
             services.AddSingleton<SearchService>();
+            services.AddSingleton<ISearchService, SearchService>();
 
             services.AddSingleton<IStartup, Startup>();
         }

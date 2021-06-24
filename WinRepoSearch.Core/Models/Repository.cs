@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,6 +12,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Host;
@@ -158,6 +161,8 @@ namespace WinRepoSearch.Core.Models
             _ = command ?? throw new ArgumentNullException(nameof(command));
             _ = argument ?? throw new ArgumentNullException(nameof(argument));
 
+            const string modulePath = @"C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\WinRepo.PowerShell.dll";
+
             Logger.LogInformation($"Preparing Execute({command},{argument},{parameter}) in {RepositoryName}");
 
             string[] array;
@@ -183,22 +188,8 @@ namespace WinRepoSearch.Core.Models
 
             var isScript = command.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase);
 
-            argument = string.Format(argument, searchTerm);
-
-            if(!argument.Contains("--PSObject", StringComparison.OrdinalIgnoreCase))
-            {
-                argument += " --PSObject";
-            }
-
-            var arguments = "'" + string.Join("' '", argument.Split(' ')) + "'";
-
-            Logger.LogInformation($"command: {command}");
-            Logger.LogInformation($"arguments: {arguments}");
-
-            var cmd = $"& {{ {(isScript ? $". '{command}' {arguments}" : $"& '{command}' {arguments}")} }}";
-            ScriptBlock? script =null;
-
             PowerShell? newPs = null;
+            ScriptBlock? scriptBlock = null;
 
             try
             {
@@ -266,70 +257,75 @@ namespace WinRepoSearch.Core.Models
 
                 newPs = CreatePowerShell();
 
-                var scr = @"
-                    param([System.IServiceProvider]$serviceProvider)
+                var path = System.IO.Path.GetDirectoryName(modulePath);
 
-                    Write-Verbose 'Adding function...'
+                var scriptCode = $@"
+                    pushd
+                    try{{
+                        Set-Location {path}
+                        $module = '.\Scripts\WinRepo.psm1'
 
-                    function Set-Startup {
-                        param(
-                            [WinRepoSearch.Core.Contracts.Services.IStartup]$s,
-                            [System.IServiceProvider]$sp
-                        )
-                        if(-not $s) { throw ""`$s is `$null."" }
-                        if(-not $sp) { throw ""`$sp is `$null."" }
+                        . '.\Scripts\Assemblies.ps1'
 
-                        Write-Verbose 'Entering function...'
+                        Remove-Module $module -ErrorAction SilentlyContinue
+                        Import-Module $module
 
-                        $startup = $s;
-                        Write-Verbose -Message ""`$startup: $startup"";
-                        # Write-Output $startup;
-                        $startup.ServiceProvider = $sp;
-                        Write-Verbose -Message ""`$startup.ServiceProvider: $startup.ServiceProvider"";
-                        # Write-Output $startup.ServiceProvider;
+                        $result = Search-WinRepoRepositories -Query vscode -Repo '{RepositoryName}' -Verbose
+                        $count = $result.Count
 
-                        Write-Verbose 'Exiting function...'
-                    }
+                        Write-Verbose ""script - `$count: $count""
 
-                    Write-Verbose 'Added function...'
+                        if($result) {{
+                            Format-Table $result
+                        }}
 
-                    $startup = [WinRepo.PowerShell.Module]::GetStartup();
-                    if(-not $startup) { throw ""`$startup is `$null."" }
-                    if(-not $serviceProvider) { throw ""`$serviceProvider is `$null."" }
-                    Write-Verbose ""`$startup: $startup""
-                    Write-Verbose ""`$serviceProvider: $serviceProvider""
-
-                    Set-Startup -s $startup -sp $serviceProvider
-                    " + cmd + @"
+                        return $result
+                    }} catch {{
+                        Write-Verbose (""script - caught: ["" + $_.ToString() + ""]"")
+                    }} finally {{
+                        popd
+                    }}
                 ";
 
-                Console.WriteLine(scr);
+                Console.WriteLine(scriptCode);
 
-                script = ScriptBlock.Create(scr);
+                scriptBlock = ScriptBlock.Create(scriptCode);
 
                 var ps = newPs
                     .AddStatement()
                     .AddCommand("Import-Module")
-                    .AddArgument(@"C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\WinRepo.PowerShell.dll")
+                    .AddArgument(modulePath)
+                    .AddStatement()
+                    .AddCommand("Import-Module")
+                    .AddArgument($@"{Path.GetDirectoryName(modulePath)}\Scripts\WinRepo.psm1")
                     .AddStatement()
                     .AddCommand("Invoke-Command")
                     .AddParameter("-NoNewScope")
                     .AddParameter("-Verbose")
-                    .AddParameter("-ScriptBlock", script)
-                    .AddParameter("-ArgumentList", ServiceProvider)
-                    //.AddStatement()
-                    //.AddCommand("Invoke-Command")
-                    //.AddParameter("-NoNewScope")
-                    //.AddParameter("-Verbose")
-                    //.AddParameter("-ScriptBlock", script)
+                    .AddParameter("-ScriptBlock", scriptBlock)
                     ;
 
 
-                var result = ps.Invoke();
+                Debug.WriteLine("*** Before Invoke ***");
 
-                foreach(var err in ps.Streams.Error)
+                var asyncState = ps.BeginInvoke();
+
+                asyncState.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(60));
+
+                if (!asyncState.IsCompleted)
                 {
-                    Console.Error.WriteLine(err.ToString());
+                    Debug.Write("Force Stop...");
+                    ps.Stop();
+                    Debug.Write($"{asyncState.IsCompleted}");
+                }
+
+                var result = ps.EndInvoke(asyncState);
+
+                Debug.WriteLine("After Invoke");
+
+                foreach (var err in ps.Streams.Error)
+                {
+                    Debug.WriteLine($"ERROR: {err}");
                 }
 
                 //ps.Dispose();
@@ -343,7 +339,7 @@ namespace WinRepoSearch.Core.Models
                 //    .AddParameter("-ScriptBlock", script)
                 //    ;
 
-                Logger.LogInformation($"Invoke-Command -NoNewScope -ScriptBlock {script} in {RepositoryName}");
+                Logger.LogInformation($"Invoke-Command -NoNewScope -ScriptBlock {scriptBlock} in {RepositoryName}");
 
                 //var result = ps.Invoke();
 
@@ -354,24 +350,29 @@ namespace WinRepoSearch.Core.Models
                 ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r.ToString()));
                 Logger.LogDebug("End Error:");
 
-                var results = string.Join(Environment.NewLine, result.Select(i => $"{i.Properties["name"]} ({i.Properties["version"]})").ToList());
-
-                results = new Regex(@"^[^a-zA-Z0-9]*(?=[a-zA-Z0-9_.\-])").Replace(results, "").Trim();
-
-                array = results.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-                return Task.FromResult(BuildResults(argument, parameter, array));
+                return Task.FromResult(CleanAndBuildResult(argument, command, parameter));
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, $"Error in Execute({script}) in {RepositoryName}");
+                Logger.LogError(ex, $"Error in Execute({scriptBlock}) in {RepositoryName}");
                 throw;
             }
             finally
             {
-                Logger.LogInformation($"Leaving Execute(Invoke-Command -NoNewScope -ScriptBlock {script}) in {RepositoryName}");
+                Logger.LogInformation($"Leaving Execute(Invoke-Command -NoNewScope -ScriptBlock {scriptBlock}) in {RepositoryName}");
                 newPs?.Dispose();
             }
+        }
+
+        public LogItem CleanAndBuildResult<TParameter>(PSDataCollection<PSObject> result, string? command, TParameter parameter)
+        {
+            var results = string.Join(Environment.NewLine, result.Select(i => $"{i.Properties["name"]} ({i.Properties["version"]})").ToList());
+
+            results = new Regex(@"^[^a-zA-Z0-9]*(?=[a-zA-Z0-9_.\-])").Replace(results, "").Trim();
+
+            var log = results.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            return BuildResults(command, parameter, log);
         }
 
         private void Runspace_StateChanged(object? sender, System.Management.Automation.Runspaces.RunspaceStateEventArgs e)

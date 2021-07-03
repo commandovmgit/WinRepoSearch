@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WinRepoSearch.Contracts.ViewModels;
+using WinRepoSearch.Core;
 using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Models;
 
@@ -165,6 +166,9 @@ namespace WinRepoSearch.ViewModels
         public bool IsLogNotEmpty => Log.Count > 0;
 
         public bool IsNotEmpty => !IsEmpty;
+
+        public Commands Command { get; set; }
+        public bool IsVerbose { get; set; }
 
         public SearchViewModel(Core.Services.SearchService sampleDataService)
         {

@@ -174,7 +174,7 @@ Write-Verbose ""`$result.Length: $count""
 Write-Output $result
 ";
 
-        private Task<LogItem> ExecuteCommand<TParameter>(string? command, string? argument, TParameter parameter)
+        private Task<LogItem> ExecuteCommand<TParameter>(string? command, string? argument, TParameter parameter, int timeout = 0)
         {
             _ = command ?? throw new ArgumentNullException(nameof(command));
             _ = argument ?? throw new ArgumentNullException(nameof(argument));
@@ -295,7 +295,14 @@ Write-Output $result
 
                 var asyncState = ps.BeginInvoke();
 
-                asyncState.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(60));
+                if (timeout > 0)
+                {
+                    asyncState.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(timeout));
+                }
+                else
+                {
+                    asyncState.AsyncWaitHandle.WaitOne();
+                }
 
                 if (!asyncState.IsCompleted)
                 {
@@ -342,10 +349,10 @@ Write-Output $result
                     //var result = ps.Invoke();
 
                     Logger.LogDebug("Begin Results:");
-                    result.ToList().ForEach(r => Logger.LogDebug(r.ToString()));
+                    result.ToList().ForEach(r => Logger.LogDebug(r?.ToString() ?? "<null>"));
                     Logger.LogDebug("End Results:");
                     Logger.LogDebug("Begin Error:");
-                    ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r.ToString()));
+                    ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r?.ToString() ?? "<null>"));
                     Logger.LogDebug("End Error:");
 
                     var res = CleanAndBuildResult(result, command, parameter);
@@ -369,7 +376,7 @@ Write-Output $result
             if (result.FirstOrDefault()?.Properties["name"] is null)
             {
                 Logger.LogDebug("CleanAndBuildResult: Creating new results from strings.");
-                var log = result.Select(i => i.ToString()).ToArray();
+                var log = result.Select(i => i?.ToString() ?? "<null>").ToArray();
                 var res = BuildSearchResults(log, parameter?.ToString());
                 Logger.LogDebug($"CleanAndBuildResult: Returning: res.Result.Count(): {res.Result.Count()}");
                 return res;
@@ -470,10 +477,14 @@ Write-Output $result
                         appName.Equals(AppNameColumn) ||
                         appVersion.StartsWith("v") ||
                         line.IndexOf("bucket:", StringComparison.OrdinalIgnoreCase) > -1 ||
-                        line.EndsWith("packages found.", StringComparison.OrdinalIgnoreCase))
+                        line.EndsWith("packages found.", StringComparison.OrdinalIgnoreCase) ||
+                        line.EndsWith("does not exist.", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
+
+                    if (line.StartsWith("Did you know") ||
+                        line.StartsWith("No package found matching input criteria.")) break;
 
                     if (string.IsNullOrWhiteSpace(appName) && string.IsNullOrEmpty(appId))
                     {
@@ -487,8 +498,8 @@ Write-Output $result
                         AppVersion = appVersion,
                     };
 
-                    if (!string.IsNullOrEmpty(item.AppName) &&
-                        !string.IsNullOrEmpty(item.AppVersion))
+                    if (!string.IsNullOrEmpty(item.AppName.Trim()) &&
+                        !string.IsNullOrEmpty(item.AppVersion.Trim()))
                     {
                         result.Add(item);
                     }

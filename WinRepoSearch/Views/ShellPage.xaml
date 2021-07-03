@@ -68,7 +68,7 @@
                               VerticalAlignment="Stretch"
                               VerticalContentAlignment="Center">
                 <controls:Loading.Background>
-                    <brushes:AcrylicBrush BackgroundSource="Backdrop"
+                    <brushes:AcrylicBrush 
                               TintColor="Black"
                               TintOpacity="0.2"/>
                 </controls:Loading.Background>

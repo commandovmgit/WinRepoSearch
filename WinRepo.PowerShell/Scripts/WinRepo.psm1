@@ -8,10 +8,10 @@ function Initialize {
 
     $location = (Get-Location).Path;
 
-    if(-not (Test-Path 'Common.ps1')) {
+    if (-not (Test-Path 'Common.ps1')) {
         $parts = $location.Split('\')
-        for($i=$parts.Length-1; $i -gt 0; $i-=1) {
-            $path = [System.String]::Join("\", $parts[0..($i-1)])
+        for ($i = $parts.Length - 1; $i -gt 0; $i -= 1) {
+            $path = [System.String]::Join("\", $parts[0..($i - 1)])
             Write-Verbose "Initialize - `$path: $path"
             Set-Location $path
             $common_ps1 = Get-ChildItem common.ps1 -Recurse
@@ -19,14 +19,15 @@ function Initialize {
             if ($common_ps1) { break }
         }
 
-        if($common_ps1) {
+        if ($common_ps1) {
             Write-Verbose "Initialize - Found common.ps1 at $common_ps1"
             $array = @()
             $array += $common_ps1
             $location = [Path]::GetDirectoryName($array[0].FullName)
             Set-Location $location
             Write-Verbose "Initialize - `$location: $location"
-        } else {
+        }
+        else {
             Write-Verbose "Initialize - Common.ps1 Not found!"
         }
     }
@@ -53,6 +54,10 @@ function Search-WinRepoRepositories {
 
     $r = Search-WinRepoRepositories_Inner -init:$initialized -Query:$Query -Repo:$Repo
 
+    if($r.Count -eq 0) {
+        Write-Host "No results for $Query in $Repo"
+    }
+
     Write-Verbose "Search-WinRepoRepositories - Leaving"
     return $r
 }
@@ -66,7 +71,7 @@ function Search-WinRepoRepositories_Inner {
     )
     Write-Verbose "Search-WinRepoRepositories_Inner - Entered"
 
-    if(-not $init) {
+    if (-not $init) {
         throw "-init is `$null!"
     }
 
@@ -97,7 +102,7 @@ function Search-WinRepoRepositories_Inner {
                 Write-Verbose 'Search-WinRepoRepositories_Inner - $repository is $null'; continue
             }
 
-            if($repository -eq '') {
+            if ($repository -eq '') {
                 Write-Verbose 'Search-WinRepoRepositories_Inner - $repository is empty'; continue
             }
 
@@ -121,9 +126,10 @@ function Search-WinRepoRepositories_Inner {
                 $block = [Scriptblock]::Create("& $command $cmd")
 
                 try {
-                try{
-                    $result = $block.Invoke()
-                    } catch {
+                    try {
+                        $result = $block.Invoke()
+                    }
+                    catch {
                         Write-Verbose $_
                         $result = @();
                         return $result;
@@ -132,20 +138,20 @@ function Search-WinRepoRepositories_Inner {
                     $count = $result.Length
                     Write-Verbose "Search-WinRepoRepositories_Inner - `$result.Length: $count"
 
-                    switch($repository.RepositoryName) {
-                        {$_ -ieq 'scoop'} {
+                    switch ($repository.RepositoryName) {
+                        { $_ -ieq 'scoop' } {
                             $result | ForEach-Object -Process {
                                 Write-Verbose "Search-WinRepoRepositories_Inner - ${repository.RepositoryName} - ${_.name} - ${_.version}"
 
                                 Add-Member -Name 'id' `
-                                           -MemberType NoteProperty `
-                                           -Value $_.name `
-                                           -InputObject $_
+                                    -MemberType NoteProperty `
+                                    -Value $_.name `
+                                    -InputObject $_
 
                                 Add-Member -Name 'repo' `
-                                           -MemberType NoteProperty `
-                                           -Value $repository.RepositoryName `
-                                           -InputObject $_
+                                    -MemberType NoteProperty `
+                                    -Value $repository.RepositoryName `
+                                    -InputObject $_
                             }
                         }
 
@@ -158,19 +164,31 @@ function Search-WinRepoRepositories_Inner {
 
                             Write-Verbose "Search-WinRepoRepositories_Inner - `$logItem.Result: $logItem.Result"
 
+                            $ra = @()
+                            $ra += $logItem.Result    
+
                             $array = @()
-                            foreach($searchResult in $logItem.Result)
-                            {
-                                if(![System.String]::IsNullOrWhitespace($searchResult.appName))
-                                $item = New-Object PSObject -Property @{
-                                    name = $searchResult.appName.Trim()
-                                    id = $searchResult.appId.Trim()
-                                    repo = $searchResult.Repo.RepositoryName.Trim()
-                                    version = $searchResult.AppVersion.Trim()
+                            foreach ($searchResult in $ra) {
+                                if ([System.String]::IsNullOrWhitespace($searchResult.appName)) { 
+                                    $logItem.Result.Remove($searchResult);
+                                    continue 
                                 }
 
-                                Write-Verbose "Search-WinRepoRepositories_Inner - `$item: $item"
-                                $array += $item;
+                                $isValid = $searchResult.appId -imatch '\b[a-zA-Z0-9._-]+\b'
+                                if ($isValid) {                                
+                                
+                                    $item = New-Object PSObject -Property @{
+                                        name    = $searchResult.appName.Trim()
+                                        id      = $searchResult.appId.Trim()
+                                        repo    = $searchResult.Repo.RepositoryName.Trim()
+                                        version = $searchResult.AppVersion.Trim()
+                                    }
+
+                                    Write-Verbose "Search-WinRepoRepositories_Inner - `$item: $item"
+                                    $array += $item;
+                                } else {
+                                    #$resultArray.Remove($searchResult) | Out-Null
+                                }
                             }     
                             
                             $result = $array;
@@ -180,7 +198,8 @@ function Search-WinRepoRepositories_Inner {
                     $resultArray += $result;
                     $count = $resultArray.Length
                     Write-Verbose "Search-WinRepoRepositories_Inner - `$resultArray.Length: $count"
-                } catch {
+                }
+                catch {
                     Write-Verbose "Search-WinRepoRepositories_Inner - $_";
                     throw $_;
                 }
@@ -189,10 +208,12 @@ function Search-WinRepoRepositories_Inner {
 
         Write-Output $resultArray
         Write-Verbose "Search-WinRepoRepositories_Inner - Completed search for $Query in $Repo"
-    } catch {
+    }
+    catch {
         Write-Verbose "Search-WinRepoRepositories_Inner - Error: $_";
         throw $_;
-    } finally {
+    }
+    finally {
         Write-Verbose "Search-WinRepoRepositories_Inner - Leaving"
     }
 }

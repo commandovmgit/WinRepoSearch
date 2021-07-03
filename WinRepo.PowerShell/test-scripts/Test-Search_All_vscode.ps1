@@ -6,7 +6,7 @@ Remove-Module $module -ErrorAction SilentlyContinue
 Import-Module $module
 
 # Assertion
-$result = Search-WinRepoRepositories -Query vscode -Repo 'All' -Verbose
+$result = Search-WinRepoRepositories -Query 'blazor' -Repo 'WinGet' -Verbose
 
 $count = $result.Length;
 

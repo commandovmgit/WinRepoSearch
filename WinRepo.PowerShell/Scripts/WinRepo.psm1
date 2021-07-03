@@ -161,11 +161,12 @@ function Search-WinRepoRepositories_Inner {
                             $array = @()
                             foreach($searchResult in $logItem.Result)
                             {
+                                if(![System.String]::IsNullOrWhitespace($searchResult.appName))
                                 $item = New-Object PSObject -Property @{
-                                    name = $searchResult.appName
-                                    id = $searchResult.appId
-                                    repo = $searchResult.Repo.RepositoryName
-                                    version = $searchResult.AppVersion
+                                    name = $searchResult.appName.Trim()
+                                    id = $searchResult.appId.Trim()
+                                    repo = $searchResult.Repo.RepositoryName.Trim()
+                                    version = $searchResult.AppVersion.Trim()
                                 }
 
                                 Write-Verbose "Search-WinRepoRepositories_Inner - `$item: $item"

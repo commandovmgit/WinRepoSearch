@@ -45,7 +45,7 @@ function Search-WinRepoRepositories {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]$Query,
-        [Parameter(Mandatory = $false)]$Repo = $null
+        [Parameter(Mandatory = $false)]$Repo = 'All'
     )
     Write-Verbose "Search-WinRepoRepositories - Entered"
 
@@ -121,15 +121,26 @@ function Search-WinRepoRepositories_Inner {
                 $block = [Scriptblock]::Create("& $command $cmd")
 
                 try {
+                try{
                     $result = $block.Invoke()
+                    } catch {
+                        Write-Verbose $_
+                        $result = @();
+                        return $result;
+                    }
 
                     $count = $result.Length
                     Write-Verbose "Search-WinRepoRepositories_Inner - `$result.Length: $count"
 
                     switch($repository.RepositoryName) {
-                        (-ieq 'scoop') {
+                        {$_ -ieq 'scoop'} {
                             $result | ForEach-Object -Process {
                                 Write-Verbose "Search-WinRepoRepositories_Inner - ${repository.RepositoryName} - ${_.name} - ${_.version}"
+
+                                Add-Member -Name 'id' `
+                                           -MemberType NoteProperty `
+                                           -Value $_.name `
+                                           -InputObject $_
 
                                 Add-Member -Name 'repo' `
                                            -MemberType NoteProperty `
@@ -145,10 +156,10 @@ function Search-WinRepoRepositories_Inner {
 
                             [WinRepoSearch.Core.Models.LogItem]$logItem = $repository.CleanAndBuildResult($result, 'search', $Query)
 
-                            Write-Verbose "Search-WinRepoRepositories_Inner - `$logItem.Results: $logItem.Results"
+                            Write-Verbose "Search-WinRepoRepositories_Inner - `$logItem.Result: $logItem.Result"
 
                             $array = @()
-                            foreach($searchResult in $logItem.Results)
+                            foreach($searchResult in $logItem.Result)
                             {
                                 $item = New-Object PSObject -Property @{
                                     name = $searchResult.appName

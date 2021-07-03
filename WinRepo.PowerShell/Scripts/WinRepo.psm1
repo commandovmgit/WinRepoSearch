@@ -141,17 +141,27 @@ function Search-WinRepoRepositories_Inner {
                         default {
                             $log = $result
 
+                            Write-Verbose "Search-WinRepoRepositories_Inner - `$result: $result"
+
                             [WinRepoSearch.Core.Models.LogItem]$logItem = $repository.CleanAndBuildResult($result, 'search', $Query)
 
+                            Write-Verbose "Search-WinRepoRepositories_Inner - `$logItem.Results: $logItem.Results"
+
+                            $array = @()
                             foreach($searchResult in $logItem.Results)
                             {
-                                $item = New-Object PSObject -ArgumentList {
+                                $item = New-Object PSObject -Property @{
                                     name = $searchResult.appName
                                     id = $searchResult.appId
                                     repo = $searchResult.Repo.RepositoryName
                                     version = $searchResult.AppVersion
                                 }
-                            }
+
+                                Write-Verbose "Search-WinRepoRepositories_Inner - `$item: $item"
+                                $array += $item;
+                            }     
+                            
+                            $result = $array;
                         }
                     }
 
@@ -192,8 +202,6 @@ function Install-WinRepoPackage {
     $serviceProvider = $initialized[1]
 
     $repos = $startup.SearchService.Repositories
-
-    Write-Host $repos
 
     $resultArray = @()
 

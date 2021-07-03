@@ -3,26 +3,31 @@ $moduleLocation = (Get-Module WinRepo.PowerShell).Path `
 
 Write-Verbose "`$moduleLocation: [$moduleLocation]"
 
-if(-not (Test-Path $moduleLocation)) { throw "Cannot find module at: $moduleLocation"}
+if (-not (Test-Path $moduleLocation)) { throw "Cannot find module at: $moduleLocation" }
 
-Remove-Module $moduleLocation -ErrorAction SilentlyContinue
-Import-Module $moduleLocation -Force -ErrorAction Stop
+$moduleLoaded = -not (Get-Module WinRepo)
 
+#Remove-Module $moduleLocation -ErrorAction SilentlyContinue
+if (-not $moduleLoaded) {
+    Import-Module $moduleLocation -Force -ErrorAction SilentlyContinue
+}
 Push-Location
 
-if(-not (Test-Path .\WinRepos.psm1)) {
-    $defaultPath = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0'
-
-    Set-Location $defaultPath
-
-    Write-Verbose "Changed location to $defaultPath"
-}
-
 try {
-    [WinRepo.PowerShell.Startup]$startup = [Module]::iStartup;
-    [System.IServiceProvider]$serviceProvider = $startup.ServiceProvider;
+    if (-not (Test-Path .\WinRepos.psm1)) {
+        $defaultPath = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0'
 
-    Write-Output $startup, $serviceProvider
+        Set-Location $defaultPath
+
+        Write-Verbose "Changed location to $defaultPath"
+    }
+
+    if (-not $moduleLoaded) {
+        $startup = [Module]::iStartup;
+        [System.IServiceProvider]$serviceProvider = $startup.ServiceProvider;
+
+        Write-Output $startup, $serviceProvider
+    }
 }
 finally {
     Pop-Location

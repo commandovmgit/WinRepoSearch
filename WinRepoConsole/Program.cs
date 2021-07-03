@@ -1,10 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
 using WinRepo.PowerShell;
+
 using WinRepoSearch.Core.Services;
 using WinRepoSearch.ViewModels;
 
@@ -17,7 +21,7 @@ namespace WinRepoConsole
         [ModuleInitializer]
         static internal void MyInitializer()
         {
-            Console.WriteLine("Initializing Host.");
+            //Logger.LogDebug("Initializing Host.");
 
             var builder = CreateHostBuilder();
             ServiceHost = builder.Build();
@@ -29,19 +33,23 @@ namespace WinRepoConsole
             .ConfigureContainer<IServiceCollection>(collection =>
             {
                 Startup.ConfigureServices(collection);
-                Console.WriteLine("ConfiguredServices.");
+                //Logger.LogDebug("ConfiguredServices.");
             });
 
-        static void Main(string[] args)
+        private static ILogger? Logger {get; set;}
+
+        static async Task Main(string[] args)
         {
             var service = ServiceHost.Services.GetRequiredService<SearchService>();
             var logger = ServiceHost.Services.GetRequiredService<ILogger<Program>>();
             var viewModel = ServiceHost.Services.GetRequiredService<SearchViewModel>();
 
             var searchTerm = args.FirstOrDefault() ?? "vscode";
-            var repoToSearch = "Chocolatey";
+            var repoToSearch = "All";
 
-            Console.WriteLine($"SearchRepositoryCmdlet.ProcessRecord: Enter - SearchTerm: {searchTerm}, RepoToSearch: {repoToSearch}");
+            Logger = Startup.Services?.GetRequiredService<ILogger<Program>>();
+
+            Logger.LogDebug($"SearchRepositoryCmdlet.ProcessRecord: Enter - SearchTerm: {searchTerm}, RepoToSearch: {repoToSearch}");
 
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -59,25 +67,27 @@ namespace WinRepoConsole
 
             viewModel.SearchTerm = searchTerm;
 
-            Console.WriteLine("SearchRepositoryCmdlet.ProcessRecord: Before PerformSearchAsync");
-            var results = service.PerformSearchAsync(viewModel);
-            Console.WriteLine("SearchRepositoryCmdlet.ProcessRecord: After PerformSearchAsync");
-
-            var enumerator = results.GetAsyncEnumerator();
-
-            while (enumerator.MoveNextAsync().Result)
+            try
             {
-                Console.WriteLine("SearchRepositoryCmdlet.ProcessRecord: Moved Next");
+                Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: Before PerformSearchAsync");
+                var results = service.PerformSearchAsync(viewModel);
+                Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: After PerformSearchAsync");
 
-                var resultSet = enumerator.Current;
+                await foreach (var resultSet in results)
+                {
+                    Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: Moved Next");
 
-                logger.LogInformation($"Found {resultSet.Result.Count()} results in {resultSet.Result.FirstOrDefault()?.Repo.RepositoryName}");
+                    Logger.LogDebug($"Found {resultSet.Result.Count()} results in {resultSet.Result.FirstOrDefault()?.Repo.RepositoryName}");
 
-                resultSet.Result.ToList().ForEach(r => logger.LogInformation(r.Markdown));
+                    resultSet.Result.ToList().ForEach(r => Console.WriteLine(r.ListMarkdown));
 
-                Console.WriteLine($"SearchRepositoryCmdlet.ProcessRecord: wrote: {resultSet}");
+                    Logger.LogDebug($"SearchRepositoryCmdlet.ProcessRecord: wrote: {resultSet}");
+                }
             }
-
+            catch (AggregateException ae)
+            {
+                Console.Error.WriteLine(ae.ToString());
+            }
         }
     }
 }

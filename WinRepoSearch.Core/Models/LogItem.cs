@@ -5,7 +5,7 @@ namespace WinRepoSearch.Core.Models
 {
     public record LogItem
     {
-        private IEnumerable<SearchResult> _result= Array.Empty<SearchResult>();
+        internal IEnumerable<SearchResult> _result= Array.Empty<SearchResult>();
         private InnerItem[] _log = Array.Empty<InnerItem>();
 
         public IEnumerable<SearchResult> Result { get => _result; init => _result = value; }

@@ -35,43 +35,43 @@ namespace WinRepo.PowerShell.Cmdlets
 
         protected override void BeginProcessing()
         {
-            Console.WriteLine($"SearchRepositoryCmdlet.BeginProcessing: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
+            Logger.LogDebug($"SearchRepositoryCmdlet.BeginProcessing: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
 
             Service = ServiceHost.Services.GetRequiredService<SearchService>();
-            Console.WriteLine("SearchRepositoryCmdlet.BeginProcessing: Created Service.");
+            Logger.LogDebug("SearchRepositoryCmdlet.BeginProcessing: Created Service.");
 
             Logger = ServiceHost.Services.GetRequiredService<ILogger<SearchRepositoryCmdlet>>();
-            Logger.LogInformation("SearchRepositoryCmdlet.BeginProcessing: Created Logger.");
+            Logger.LogDebug("SearchRepositoryCmdlet.BeginProcessing: Created Logger.");
 
             ViewModel = ServiceHost.Services.GetRequiredService<SearchViewModel>();
-            Logger.LogInformation("SearchRepositoryCmdlet.BeginProcessing: Created ViewModel.");
+            Logger.LogDebug("SearchRepositoryCmdlet.BeginProcessing: Created ViewModel.");
 
             base.BeginProcessing();
 
-            Logger.LogInformation("SearchRepositoryCmdlet.BeginProcessing: Exit");
+            Logger.LogDebug("SearchRepositoryCmdlet.BeginProcessing: Exit");
         }
 
         protected override void StopProcessing()
         {
-            Logger.LogInformation($"SearchRepositoryCmdlet.StopProcessing: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
+            Logger.LogDebug($"SearchRepositoryCmdlet.StopProcessing: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
 
             base.StopProcessing();
 
-            Logger.LogInformation("SearchRepositoryCmdlet.StopProcessing: Exit");
+            Logger.LogDebug("SearchRepositoryCmdlet.StopProcessing: Exit");
         }
 
         protected override void EndProcessing()
         {
-            Logger.LogInformation($"SearchRepositoryCmdlet.EndProcessing: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
+            Logger.LogDebug($"SearchRepositoryCmdlet.EndProcessing: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
 
             base.EndProcessing();
 
-            Logger.LogInformation("SearchRepositoryCmdlet.EndProcessing: Exit");
+            Logger.LogDebug("SearchRepositoryCmdlet.EndProcessing: Exit");
         }
 
         protected override void ProcessRecord()
         {
-            Logger.LogInformation($"SearchRepositoryCmdlet.ProcessRecord: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
+            Logger.LogDebug($"SearchRepositoryCmdlet.ProcessRecord: Enter - SearchTerm: {SearchTerm}, RepoToSearch: {RepoToSearch}");
 
             if (string.IsNullOrWhiteSpace(SearchTerm))
             {
@@ -93,31 +93,31 @@ namespace WinRepo.PowerShell.Cmdlets
 
             base.ProcessRecord();
 
-            Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Exit");
+            Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: Exit");
         }
 
         private async Task PerformSearchAsync()
         {
-            Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Before PerformSearchAsync");
+            Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: Before PerformSearchAsync");
             var results = Service.PerformSearchAsync(ViewModel);
-            Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: After PerformSearchAsync");
+            Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: After PerformSearchAsync");
 
             var enumerator = results.GetAsyncEnumerator();
 
             while (await enumerator.MoveNextAsync())
             {
-                Logger.LogInformation("SearchRepositoryCmdlet.ProcessRecord: Moved Next");
+                Logger.LogDebug("SearchRepositoryCmdlet.ProcessRecord: Moved Next");
 
                 var resultSet = enumerator.Current;
 
-                Logger.LogInformation($"resultSet: {resultSet}");
+                Logger.LogDebug($"resultSet: {resultSet}");
 
-                Logger.LogInformation($"Found {resultSet.Result.Count()} results in {resultSet.Result.FirstOrDefault()?.Repo.RepositoryName}");
+                Logger.LogDebug($"Found {resultSet.Result.Count()} results in {resultSet.Result.FirstOrDefault()?.Repo.RepositoryName}");
 
                 WriteVerbose(string.Join(Environment.NewLine, resultSet.Log.Select(ii => $"{ii.Timestamp}: {ii.Message}")));
 
                 WriteObject(resultSet);
-                Logger.LogInformation($"SearchRepositoryCmdlet.ProcessRecord: wrote: {resultSet}");
+                Logger.LogDebug($"SearchRepositoryCmdlet.ProcessRecord: wrote: {resultSet}");
             }
         }
     }

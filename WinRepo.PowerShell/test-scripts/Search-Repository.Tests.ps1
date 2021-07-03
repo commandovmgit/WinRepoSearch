@@ -23,9 +23,7 @@ Describe 'Search-Repositories' {
 
             $count | Should -BeGreaterThan 0
 
-            Write-Host ("`$result.Length: $count")
-
-            Write-Host $result
+            Write-Verbose ("`$result.Length: $count")
         }
     }
 
@@ -45,9 +43,7 @@ Describe 'Search-Repositories' {
 
             $count | Should -BeGreaterThan 0
 
-            Write-Host ("`$result.Length: $count")
-
-            Write-Host $result
+            Write-Verbose ("`$result.Length: $count")
 
         }
     }

@@ -25,7 +25,9 @@ namespace WinRepoSearch.Core.Services
             _ = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _ = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            logger.LogInformation("SearchService.ctor(): Enter");
+            Logger = logger;
+
+            Logger.LogDebug("SearchService.ctor(): Enter");
 
             Instance = this;
 
@@ -33,49 +35,49 @@ namespace WinRepoSearch.Core.Services
 
             if (File.Exists(filename))
             {
-                logger.LogInformation($"SearchService.ctor(): Reading: {filename}");
-                logger.LogInformation(File.ReadAllText(filename));
+                Logger.LogDebug($"SearchService.ctor(): Reading: {filename}");
+                Logger.LogDebug(File.ReadAllText(filename));
 
                 var des = new DeserializerBuilder().Build();
 
                 var repos = des.Deserialize<Repositories>(new StringReader(File.ReadAllText(filename)));
-                logger.LogInformation($"SearchService.ctor(): repos: {repos?.ToString() ?? "<null>"}");
+                Logger.LogDebug($"SearchService.ctor(): repos: {repos?.ToString() ?? "<null>"}");
 
                 if (repos is not null)
                 {
-                    repos.ToList().ForEach(r => {
+                    repos.ToList().ForEach(r =>
+                    {
                         r.Logger = serviceProvider.GetService<ILogger<Repository>>()!;
                         r.ServiceProvider = serviceProvider.GetService<IStartup>()!.ServiceProvider ?? serviceProvider;
                     });
                     Repositories = repos.ToImmutableArray();
                 }
 
-                logger.LogInformation($"SearchService.ctor(): repos: {repos?.Count ?? -1}");
-                logger.LogInformation($"SearchService.ctor(): Repositories: {Repositories.Count()}");
+                Logger.LogDebug($"SearchService.ctor(): repos: {repos?.Count ?? -1}");
+                Logger.LogDebug($"SearchService.ctor(): Repositories: {Repositories.Count()}");
             }
             else
             {
-                logger.LogError($"SearchService.ctor(): File node found: {filename}");
+                Logger.LogError($"SearchService.ctor(): File node found: {filename}");
             }
-            Logger = logger;
-            logger.LogInformation("SearchService.ctor(): Exit");
+            Logger.LogDebug("SearchService.ctor(): Exit");
         }
 
         public async IAsyncEnumerable<LogItem> PerformSearchAsync(SearchViewModel? viewModel)
         {
             _ = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
 
-            Logger.LogInformation($"{viewModel.Repositories.Count} repos in viewModel.");
+            Logger.LogDebug($"{viewModel.Repositories.Count} repos in viewModel.");
 
             foreach (var repo in viewModel.Repositories.Where(r => r.IsEnabled))
             {
-                Logger.LogInformation($"Searching {repo.RepositoryName} for {viewModel.SearchTerm}");
+                Logger.LogDebug($"Searching {repo.RepositoryName} for {viewModel.SearchTerm}");
 
                 var result = await repo.Search(viewModel.SearchTerm);
 
                 if (result is not null)
                 {
-                    Logger.LogInformation($"Found {result.Result.Count()} results in {repo.RepositoryName}.");
+                    Logger.LogDebug($"Found {result.Result.Count()} results in {repo.RepositoryName}.");
                     yield return result;
                 }
             }

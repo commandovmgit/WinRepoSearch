@@ -21,6 +21,7 @@ namespace WinRepo.PowerShell
         private ISearchService? _searchService;
 
         public IServiceProvider? ServiceProvider { get; set; }
+        public static IServiceProvider? Services { get; private set; }
 
         public ISearchService? SearchService
             => _searchService ??= ServiceProvider?.GetRequiredService<ISearchService>();
@@ -31,6 +32,7 @@ namespace WinRepo.PowerShell
         public Startup(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
+            Services = serviceProvider;
         }
 
         internal static void ConfigureServices(IServiceCollection services)
@@ -38,7 +40,7 @@ namespace WinRepo.PowerShell
             services.AddLogging(builder =>
             {
                 builder.AddConsole();
-                Console.WriteLine("Added console.");
+                //Logger.LogDebug("Added console.");
             });
 
             services.AddTransient<SearchViewModel>();

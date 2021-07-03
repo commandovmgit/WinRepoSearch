@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Management.Automation;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -33,6 +34,20 @@ namespace WinRepoSearch.Core.Models
         public SearchResult(string resultId, Repository repo)
         {
             ResultId = resultId;
+            Repo = repo;
+
+            PropertyChanged += SearchResult_PropertyChanged ;
+        }
+
+        public SearchResult(PSMemberInfoCollection<PSPropertyInfo> result, Repository repo)
+        {
+            _ = result ?? throw new ArgumentNullException(nameof(result));
+
+            ResultId = result["id"]?.Value.ToString() ?? "Unknown";
+            AppId = ResultId;
+            AppName = result["name"]?.Value.ToString() ?? "Unknown";
+            AppVersion = result["version"]?.Value.ToString() ?? "Unknown";
+
             Repo = repo;
 
             PropertyChanged += SearchResult_PropertyChanged ;
@@ -148,6 +163,8 @@ namespace WinRepoSearch.Core.Models
 _**Results from {Repo.RepositoryName}**_
 ";
 
+        public string ListMarkdown => 
+        $"🔸 [{Repo.RepositoryName}] {AppName ?? Key ?? "<none>"} ({AppVersion ?? "<none>"})";
     }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }

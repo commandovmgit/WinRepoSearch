@@ -23,14 +23,14 @@ namespace WinRepo.PowerShell
         [ModuleInitializer]
         static public void MyInitializer()
         {
-            Console.WriteLine("Initializing Host.");
+            //Logger.LogDebug("Initializing Host.");
 
             var builder = CreateHostBuilder();
             ServiceHost = builder.Build();
 
             iStartup.ServiceProvider = ServiceHost.Services;
 
-            Console.WriteLine($"startup.ServiceProvider: [{iStartup.ServiceProvider}]");
+            //Logger.LogDebug($"startup.ServiceProvider: [{iStartup.ServiceProvider}]");
 
             ServiceHost.RunAsync();
         }
@@ -40,7 +40,7 @@ namespace WinRepo.PowerShell
             .ConfigureContainer<IServiceCollection>(collection =>
             {
                 Startup.ConfigureServices(collection);
-                Console.WriteLine("ConfiguredServices.");
+                //Logger.LogDebug("ConfiguredServices.");
             });
     }
 }

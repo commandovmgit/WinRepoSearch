@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json.Linq;
 
 using System;
@@ -156,16 +157,31 @@ namespace WinRepoSearch.Core.Models
         internal Task<LogItem> Install(SearchResult result)
             => ExecuteCommand(Command, InstallCmd, result);
 
+        const string searchScript = @"$module = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\WinRepo.psm1'
+
+. 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\Assemblies.ps1'
+
+Remove-Module $module -ErrorAction SilentlyContinue
+Import-Module $module
+
+# Assertion
+$result = Search-WinRepoRepositories -Query {1} -Repo '{0}' -Verbose
+
+$count = $result.Length;
+
+Write-Verbose ""`$result.Length: $count""
+
+Write-Output $result
+";
+
         private Task<LogItem> ExecuteCommand<TParameter>(string? command, string? argument, TParameter parameter)
         {
             _ = command ?? throw new ArgumentNullException(nameof(command));
             _ = argument ?? throw new ArgumentNullException(nameof(argument));
 
-            const string modulePath = @"C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\WinRepo.PowerShell.dll";
+            argument = argument.Split(' ').FirstOrDefault();
 
-            Logger.LogInformation($"Preparing Execute({command},{argument},{parameter}) in {RepositoryName}");
-
-            string[] array;
+            Logger.LogDebug($"Preparing Execute({command},{argument},{parameter}) in {RepositoryName}");
 
             var searchTerm = string.Empty;
 
@@ -173,7 +189,7 @@ namespace WinRepoSearch.Core.Models
             {
                 if (string.IsNullOrEmpty(strParameter))
                 {
-                    Logger.LogInformation($"Leaving {command}({parameter}) in {RepositoryName} because parameter is an empty string.");
+                    Logger.LogDebug($"Leaving {command}({parameter}) in {RepositoryName} because parameter is an empty string.");
                     return Task.FromResult(LogItem.Empty);
                 }
 
@@ -184,20 +200,20 @@ namespace WinRepoSearch.Core.Models
                 searchTerm = result.AppId;
             }
 
-            Logger.LogInformation($"searchTerm: {searchTerm}");
+            Logger.LogDebug($"searchTerm: {searchTerm}");
 
-            var isScript = command.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase);
+            var isScript = command.EndsWith(".psm1", StringComparison.OrdinalIgnoreCase);
 
             PowerShell? newPs = null;
             ScriptBlock? scriptBlock = null;
 
             try
             {
-                Logger.LogInformation($"Runspace.CanUseDefaultRunspace: {Runspace.CanUseDefaultRunspace}");
+                Logger.LogDebug($"Runspace.CanUseDefaultRunspace: {Runspace.CanUseDefaultRunspace}");
 
                 Runspace CreateLocalRunspace()
                 {
-                    Logger.LogInformation($"CreateLocalRunspace: Enter");
+                    Logger.LogDebug($"CreateLocalRunspace: Enter");
 
                     Runspace? lrs = null;
 
@@ -208,7 +224,7 @@ namespace WinRepoSearch.Core.Models
 
                         if (ci is not null)
                         {
-                            Logger.LogInformation($"CreateLocalRunspace: ConnectionInfo: {ci}");
+                            Logger.LogDebug($"CreateLocalRunspace: ConnectionInfo: {ci}");
 
                             lrs = Runspace.GetRunspaces(ci)?.FirstOrDefault();
                         }
@@ -218,12 +234,12 @@ namespace WinRepoSearch.Core.Models
                         // ignore
                     }
 
-                    var host = new WinRepoHost();
+                    var host = new WinRepoHost(Logger);
                     lrs ??= RunspaceFactory.CreateRunspace(host);
 
                     lrs.Name ??= "WinRepo Runspace";
 
-                    Logger.LogInformation($"CreateLocalRunspace: Exit");
+                    Logger.LogDebug($"CreateLocalRunspace: Exit");
                     return lrs;
                 }
 
@@ -257,47 +273,16 @@ namespace WinRepoSearch.Core.Models
 
                 newPs = CreatePowerShell();
 
-                var path = System.IO.Path.GetDirectoryName(modulePath);
+                var scriptCode = argument switch
+                {
+                    _ => string.Format(searchScript, RepositoryName, parameter)
+                };
 
-                var scriptCode = $@"
-                    pushd
-                    try{{
-                        Set-Location {path}
-                        $module = '.\Scripts\WinRepo.psm1'
-
-                        . '.\Scripts\Assemblies.ps1'
-
-                        Remove-Module $module -ErrorAction SilentlyContinue
-                        Import-Module $module
-
-                        $result = Search-WinRepoRepositories -Query vscode -Repo '{RepositoryName}' -Verbose
-                        $count = $result.Count
-
-                        Write-Verbose ""script - `$count: $count""
-
-                        if($result) {{
-                            Format-Table $result
-                        }}
-
-                        return $result
-                    }} catch {{
-                        Write-Verbose (""script - caught: ["" + $_.ToString() + ""]"")
-                    }} finally {{
-                        popd
-                    }}
-                ";
-
-                Console.WriteLine(scriptCode);
+                Logger.LogDebug(scriptCode);
 
                 scriptBlock = ScriptBlock.Create(scriptCode);
 
                 var ps = newPs
-                    .AddStatement()
-                    .AddCommand("Import-Module")
-                    .AddArgument(modulePath)
-                    .AddStatement()
-                    .AddCommand("Import-Module")
-                    .AddArgument($@"{Path.GetDirectoryName(modulePath)}\Scripts\WinRepo.psm1")
                     .AddStatement()
                     .AddCommand("Invoke-Command")
                     .AddParameter("-NoNewScope")
@@ -306,7 +291,7 @@ namespace WinRepoSearch.Core.Models
                     ;
 
 
-                Debug.WriteLine("*** Before Invoke ***");
+                Logger.LogDebug("*** Before Invoke ***");
 
                 var asyncState = ps.BeginInvoke();
 
@@ -319,38 +304,53 @@ namespace WinRepoSearch.Core.Models
                     Debug.Write($"{asyncState.IsCompleted}");
                 }
 
-                var result = ps.EndInvoke(asyncState);
-
-                Debug.WriteLine("After Invoke");
-
-                foreach (var err in ps.Streams.Error)
+                var errors = ps.Streams.Error.ToList();
+                if (errors.Count > 0)
                 {
-                    Debug.WriteLine($"ERROR: {err}");
+
+                    foreach (var error in errors)
+                    {
+                        Logger.LogError(error.ToString());
+                    }
+
+                    return Task.FromException<LogItem>(new AggregateException(errors.Select(e => e.Exception)));
                 }
+                else
+                {
+                    var result = ps.EndInvoke(asyncState);
 
-                //ps.Dispose();
-                //newPs.Dispose();
+                    Logger.LogDebug("After Invoke");
 
-                //newPs = CreatePowerShell();
+                    foreach (var err in ps.Streams.Error)
+                    {
+                        Logger.LogDebug($"ERROR: {err}");
+                    }
 
-                //ps = newPs.AddCommand("Invoke-Command")
-                //    .AddParameter("-NoNewScope")
-                //    .AddParameter("-Verbose")
-                //    .AddParameter("-ScriptBlock", script)
-                //    ;
+                    //ps.Dispose();
+                    //newPs.Dispose();
 
-                Logger.LogInformation($"Invoke-Command -NoNewScope -ScriptBlock {scriptBlock} in {RepositoryName}");
+                    //newPs = CreatePowerShell();
 
-                //var result = ps.Invoke();
+                    //ps = newPs.AddCommand("Invoke-Command")
+                    //    .AddParameter("-NoNewScope")
+                    //    .AddParameter("-Verbose")
+                    //    .AddParameter("-ScriptBlock", script)
+                    //    ;
 
-                Logger.LogDebug("Begin Results:");
-                result.ToList().ForEach(r => Logger.LogDebug(r.ToString()));
-                Logger.LogDebug("End Results:");
-                Logger.LogDebug("Begin Error:");
-                ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r.ToString()));
-                Logger.LogDebug("End Error:");
+                    Logger.LogDebug($"Invoke-Command -NoNewScope -ScriptBlock {scriptBlock} in {RepositoryName}");
 
-                return Task.FromResult(CleanAndBuildResult(argument, command, parameter));
+                    //var result = ps.Invoke();
+
+                    Logger.LogDebug("Begin Results:");
+                    result.ToList().ForEach(r => Logger.LogDebug(r.ToString()));
+                    Logger.LogDebug("End Results:");
+                    Logger.LogDebug("Begin Error:");
+                    ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r.ToString()));
+                    Logger.LogDebug("End Error:");
+
+                    var res = CleanAndBuildResult(result, command, parameter);
+                    return Task.FromResult(res);
+                }
             }
             catch (Exception ex)
             {
@@ -359,20 +359,36 @@ namespace WinRepoSearch.Core.Models
             }
             finally
             {
-                Logger.LogInformation($"Leaving Execute(Invoke-Command -NoNewScope -ScriptBlock {scriptBlock}) in {RepositoryName}");
+                Logger.LogDebug($"Leaving Execute(Invoke-Command -NoNewScope -ScriptBlock {scriptBlock}) in {RepositoryName}");
                 newPs?.Dispose();
             }
         }
 
         public LogItem CleanAndBuildResult<TParameter>(PSDataCollection<PSObject> result, string? command, TParameter parameter)
         {
-            var results = string.Join(Environment.NewLine, result.Select(i => $"{i.Properties["name"]} ({i.Properties["version"]})").ToList());
+            if (result.FirstOrDefault()?.Properties["name"] is null)
+            {
+                Logger.LogDebug("CleanAndBuildResult: Creating new results from strings.");
+                var log = result.Select(i => i.ToString()).ToArray();
+                var res = BuildSearchResults(log, parameter?.ToString());
+                Logger.LogDebug($"CleanAndBuildResult: Returning: res.Result.Count(): {res.Result.Count()}");
+                return res;
+            }
+            else
+            {
+                Logger.LogDebug("CleanAndBuildResult: Creating new results from PSObjects.");
 
-            results = new Regex(@"^[^a-zA-Z0-9]*(?=[a-zA-Z0-9_.\-])").Replace(results, "").Trim();
+                var res = LogItem.Empty;
 
-            var log = results.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach(var item in result)
+                {
+                    var sr = new SearchResult(item.Properties, this);
+                    res._result = res.Result.Append(sr);
+                }
 
-            return BuildResults(command, parameter, log);
+                Logger.LogDebug($"CleanAndBuildResult: Returning: res.Result.Count(): {res.Result.Count()}");
+                return res;
+            }
         }
 
         private void Runspace_StateChanged(object? sender, System.Management.Automation.Runspaces.RunspaceStateEventArgs e)
@@ -381,20 +397,14 @@ namespace WinRepoSearch.Core.Models
         }
 
         private LogItem BuildResults<TParameter>(string command, TParameter parameter, string[] log)
-        {
-            switch (command.Split(' ')[1])
+            => command
+                .Split(' ')
+                .LastOrDefault() switch
             {
-                case "search":
-                    return BuildSearchResults(log, parameter as string);
-
-                case "info":
-                case "show":
-                    return BuildInfoResults(log, parameter as SearchResult);
-
-            }
-
-            return LogItem.Empty;
-        }
+                "search" => BuildSearchResults(log, parameter as string),
+                "info" or "show" => BuildInfoResults(log, parameter as SearchResult),
+                _ => LogItem.Empty,
+            };
 
         private LogItem BuildInfoResults(string[] log, SearchResult? searchResult)
         {
@@ -438,7 +448,7 @@ namespace WinRepoSearch.Core.Models
 
             foreach (var line in log)
             {
-                Debug.WriteLine(line);
+                Logger.LogDebug(line);
 
                 try
                 {
@@ -460,9 +470,15 @@ namespace WinRepoSearch.Core.Models
                         appName.Equals(AppNameColumn) ||
                         appVersion.StartsWith("v") ||
                         line.IndexOf("bucket:", StringComparison.OrdinalIgnoreCase) > -1 ||
-                        line.EndsWith("packages found.", StringComparison.OrdinalIgnoreCase)) continue;
+                        line.EndsWith("packages found.", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
 
-                    if (string.IsNullOrWhiteSpace(appName) && string.IsNullOrEmpty(appId)) continue;
+                    if (string.IsNullOrWhiteSpace(appName) && string.IsNullOrEmpty(appId))
+                    {
+                        continue;
+                    }
 
                     var item = new SearchResult(line, this)
                     {
@@ -483,7 +499,11 @@ namespace WinRepoSearch.Core.Models
                 }
             }
 
-            return new LogItem(result, log.Select(l => new InnerItem(DateTimeOffset.Now, l)).ToArray());
+            var innerItems = log.Select(l => new InnerItem(DateTimeOffset.Now, l)).ToArray();
+
+            var res = new LogItem(result, innerItems);
+
+            return res;
         }
 
         private int GetIndex(string[] log, string? appColumn)
@@ -501,380 +521,5 @@ namespace WinRepoSearch.Core.Models
 
             return index;
         }
-    }
-
-    public class WinRepoPSHostRawUserInterface : PSHostRawUserInterface
-    {
-        public override ConsoleColor BackgroundColor { get => Console.BackgroundColor; set => Console.BackgroundColor = value; }
-        public override Size BufferSize
-        {
-            get => new Size(Console.BufferWidth, Console.BufferHeight);
-            set
-            {
-                var (width, height) = (value.Width, value.Height);
-
-                Console.BufferHeight = height;
-                Console.BufferWidth = width;
-            }
-        }
-        public override Coordinates CursorPosition
-        {
-            get => new Coordinates(Console.CursorLeft, Console.CursorTop);
-            set
-            {
-                var (left, top) = (value.X, value.Y);
-
-                Console.CursorLeft = left;
-                Console.CursorTop = top;
-            }
-        }
-        public override int CursorSize { get => Console.CursorSize; set => Console.CursorSize = value; }
-        public override ConsoleColor ForegroundColor { get => Console.ForegroundColor; set => Console.ForegroundColor = value; }
-
-        public override bool KeyAvailable => Console.KeyAvailable;
-
-        public override Size MaxPhysicalWindowSize => new Size(Console.LargestWindowWidth, Console.LargestWindowHeight);
-
-        public override Size MaxWindowSize => MaxPhysicalWindowSize;
-
-        public override Coordinates WindowPosition
-        {
-            get => new Coordinates(Console.WindowLeft, Console.WindowTop);
-            set
-            {
-                var (left, top) = (value.X, value.Y);
-
-                Console.WindowLeft = left;
-                Console.WindowTop = top;
-            }
-        }
-        public override Size WindowSize
-        {
-            get => new Size(Console.WindowWidth, Console.WindowHeight);
-            set
-            {
-                var (width, height) = (value.Width, value.Height);
-
-                Console.WindowHeight = height;
-                Console.WindowWidth = width;
-            }
-        }
-        public override string WindowTitle { get => Console.Title ?? "<untitled>"; set => Console.Title = value; }
-
-        public override void FlushInputBuffer()
-        {
-            Console.In.ReadToEnd();
-        }
-
-        public override BufferCell[,] GetBufferContents(Rectangle rectangle)
-        {
-            var text = ConsoleReader
-                .ReadFromBuffer((short)rectangle.Left,
-                    (short)rectangle.Top,
-                    (short)(rectangle.Right - rectangle.Left),
-                    (short)(rectangle.Top - rectangle.Bottom))
-                .SelectMany(s => s.ToCharArray())
-                .ToImmutableArray();
-
-            var result = new BufferCell[rectangle.Right - rectangle.Left, rectangle.Top - rectangle.Bottom];
-
-            for (int i = 0; i < text.Length; ++i)
-            {
-                var y = i / (rectangle.Top - rectangle.Bottom);
-                var x = i % (rectangle.Top - rectangle.Bottom);
-
-                result[x, y] = new BufferCell()
-                {
-                    Character = text[i],
-                    ForegroundColor = ForegroundColor,
-                    BackgroundColor = BackgroundColor
-                };
-            }
-
-            return result;
-        }
-
-        public override KeyInfo ReadKey(ReadKeyOptions options)
-        {
-            var key = Console.ReadKey();
-            return new KeyInfo(key.KeyChar, key.KeyChar, CalculateKeyState(key), false);
-        }
-
-        private ControlKeyStates CalculateKeyState(ConsoleKeyInfo key)
-        {
-            ControlKeyStates result = default;
-
-            if ((key.Modifiers | ConsoleModifiers.Alt) == ConsoleModifiers.Alt)
-            {
-                result |= ControlKeyStates.RightAltPressed;
-                result |= ControlKeyStates.LeftAltPressed;
-            }
-
-            if ((key.Modifiers | ConsoleModifiers.Control) == ConsoleModifiers.Control)
-            {
-                result |= ControlKeyStates.LeftCtrlPressed;
-                result |= ControlKeyStates.RightCtrlPressed;
-            }
-
-            if ((key.Modifiers | ConsoleModifiers.Shift) == ConsoleModifiers.Shift)
-            {
-                result |= ControlKeyStates.ShiftPressed;
-            }
-
-            return result;
-        }
-
-        public override void ScrollBufferContents(Rectangle source, Coordinates destination, Rectangle clip, BufferCell fill)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetBufferContents(Coordinates origin, BufferCell[,] contents)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetBufferContents(Rectangle rectangle, BufferCell fill)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class WinRepoPSHostUserInterface : PSHostUserInterface
-    {
-        public bool IsVerbose { get; set; } = false;
-
-        public override PSHostRawUserInterface RawUI => new WinRepoPSHostRawUserInterface();
-
-        public override Dictionary<string, PSObject> Prompt(string caption, string message, Collection<FieldDescription> descriptions)
-        {
-            return new();
-        }
-
-        public override int PromptForChoice(string caption, string message, Collection<ChoiceDescription> choices, int defaultChoice)
-        {
-            return -1;
-        }
-
-        public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName)
-        {
-            Console.WriteLine(caption);
-            var user = userName;
-            Console.Write(message);
-            return new(user, ReadLineAsSecureString());
-        }
-
-        public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
-        {
-            return PromptForCredential(caption, message, userName, targetName);
-        }
-
-        public override string ReadLine()
-        {
-            return Console.ReadLine() ?? "";
-        }
-
-        public override SecureString ReadLineAsSecureString()
-        {
-            var pw = ReadLine();
-            var ss = new SecureString();
-            for (int i = 0; i < pw.Length; ++i)
-            {
-                ss.InsertAt(i, pw[i]);
-            }
-
-            return ss;
-        }
-
-        public override void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value)
-        {
-            Console.ForegroundColor = foregroundColor;
-            Console.BackgroundColor = backgroundColor;
-            Console.Write(value);
-        }
-
-        public override void Write(string value)
-        {
-            Console.Write(value);
-        }
-
-        public override void WriteDebugLine(string message)
-        {
-            Debug.WriteLine(message);
-        }
-
-        public override void WriteErrorLine(string value)
-        {
-            Console.Error.WriteLine(value);
-        }
-
-        public override void WriteLine(string value)
-        {
-            Console.Out.WriteLine(value);
-        }
-
-        ConcurrentDictionary<long, ProgressRecord> Progress = new();
-
-        public override void WriteProgress(long sourceId, ProgressRecord record)
-        {
-            Progress.AddOrUpdate(sourceId, record, (_, _) => record);
-        }
-
-        public override void WriteVerboseLine(string message)
-        {
-            Debug.WriteLine(message);
-            if (IsVerbose)
-            {
-                var f = Console.ForegroundColor;
-                var b = Console.BackgroundColor;
-
-                Write(ConsoleColor.Green, b, $"VERBOSE: {message}");
-                Write(f, b, "");
-                WriteLine();
-            }
-        }
-
-        public override void WriteWarningLine(string message)
-        {
-            var f = Console.ForegroundColor;
-            var b = Console.BackgroundColor;
-
-            Write(ConsoleColor.Yellow, ConsoleColor.DarkBlue, "WARNING:");
-            Write(f, b, " ");
-            WriteLine(message);
-        }
-    }
-
-    public class WinRepoHost : PSHost
-    {
-        private Guid? _guid;
-        private WinRepoPSHostUserInterface _ui;
-
-        public override CultureInfo CurrentCulture => CultureInfo.CurrentCulture;
-
-        public override CultureInfo CurrentUICulture => CultureInfo.CurrentUICulture;
-
-        public override Guid InstanceId => _guid ??= Guid.NewGuid();
-
-        public override string Name => nameof(WinRepoHost);
-
-        public override PSHostUserInterface? UI => _ui ??= new WinRepoPSHostUserInterface();
-
-        public override Version Version => new Version("1.0");
-
-        public override void EnterNestedPrompt()
-        {
-        }
-
-        public override void ExitNestedPrompt()
-        {
-        }
-
-        public override void NotifyBeginApplication()
-        {
-        }
-
-        public override void NotifyEndApplication()
-        {
-        }
-
-        public override void SetShouldExit(int exitCode)
-        {
-            Environment.ExitCode = exitCode;
-        }
-    }
-
-    // https://stackoverflow.com/questions/12355378/read-from-location-on-console-c-sharp
-    public class ConsoleReader
-    {
-        public static IEnumerable<string> ReadFromBuffer(short x, short y, short width, short height)
-        {
-            IntPtr? bfr = Marshal.AllocHGlobal(width * height * Marshal.SizeOf(typeof(CHAR_INFO)));
-            if (bfr is null || bfr == IntPtr.Zero)
-            {
-                throw new OutOfMemoryException();
-            }
-
-            IntPtr buffer = bfr.Value;
-
-            try
-            {
-                COORD coord = new COORD();
-                SMALL_RECT rc = new SMALL_RECT();
-                rc.Left = x;
-                rc.Top = y;
-                rc.Right = (short)(x + width - 1);
-                rc.Bottom = (short)(y + height - 1);
-
-                COORD size = new COORD();
-                size.X = width;
-                size.Y = height;
-
-                const int STD_OUTPUT_HANDLE = -11;
-                if (!ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), buffer, size, coord, ref rc))
-                {
-                    // 'Not enough storage is available to process this command' may be raised for buffer size > 64K (see ReadConsoleOutput doc.)
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-                }
-
-                IntPtr ptr = buffer;
-                for (int h = 0; h < height; h++)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    for (int w = 0; w < width; w++)
-                    {
-                        CHAR_INFO ci = (CHAR_INFO)Marshal.PtrToStructure(ptr, typeof(CHAR_INFO));
-                        char[] chars = Console.OutputEncoding.GetChars(ci.charData);
-                        sb.Append(chars[0]);
-                        ptr += Marshal.SizeOf(typeof(CHAR_INFO));
-                    }
-                    yield return sb.ToString();
-                }
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(buffer);
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct CHAR_INFO
-        {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-            public byte[] charData;
-            public short attributes;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct COORD
-        {
-            public short X;
-            public short Y;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct SMALL_RECT
-        {
-            public short Left;
-            public short Top;
-            public short Right;
-            public short Bottom;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct CONSOLE_SCREEN_BUFFER_INFO
-        {
-            public COORD dwSize;
-            public COORD dwCursorPosition;
-            public short wAttributes;
-            public SMALL_RECT srWindow;
-            public COORD dwMaximumWindowSize;
-        }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool ReadConsoleOutput(IntPtr hConsoleOutput, IntPtr lpBuffer, COORD dwBufferSize, COORD dwBufferCoord, ref SMALL_RECT lpReadRegion);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GetStdHandle(int nStdHandle);
     }
 }

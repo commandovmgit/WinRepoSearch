@@ -1,3 +1,44 @@
+
+<#PSScriptInfo
+
+.VERSION 1.0
+
+.GUID 4f98a963-22fc-4d95-967b-4b3cbd5d799d
+
+.AUTHOR The Sharp Ninja
+
+.COMPANYNAME gatewayprogramming.school
+
+.COPYRIGHT (c)2021 Gateway Programming School, Inc. All rights reserved.
+
+.TAGS WinGet Scoop Chocolatey Automation
+
+.LICENSEURI https://github.com/gatewayprogrammingschool/WinRepoSearch/blob/223ece8706e62e767e488f4e100b75c900744a68/WinRepo.PowerShell/LICENSE.md
+
+.PROJECTURI https://github.com/gatewayprogrammingschool/WinRepoSearch
+
+.ICONURI
+
+.EXTERNALMODULEDEPENDENCIES
+
+.REQUIREDSCRIPTS
+
+.EXTERNALSCRIPTDEPENDENCIES
+
+.RELEASENOTES
+
+
+.PRIVATEDATA
+
+#>
+
+<#
+
+.DESCRIPTION
+ Search across WinGet, Scoop and Chocolatey simultaneously.
+
+#>
+
 using namespace WinRepo
 using namespace WinRepo.PowerShell
 using namespace WinRepoSearch.Core.Models
@@ -52,6 +93,8 @@ function Search-WinRepoRepositories {
 
     $initialized = Initialize
 
+    Write-Verbose "`$initialized: $initialized"
+
     $r = Search-WinRepoRepositories_Inner -init:$initialized -Query:$Query -Repo:$Repo
 
     if($r.Count -eq 0) {
@@ -67,7 +110,7 @@ function Search-WinRepoRepositories_Inner {
     param(
         [Parameter(Mandatory = $true)]$init,
         [Parameter(Mandatory = $true)][string]$Query,
-        [Parameter(Mandatory = $false)][WinRepo.PowerShell.DefaultRepos]$Repo = 'All'
+        [Parameter(Mandatory = $false)]$Repo = 'All'
     )
     Write-Verbose "Search-WinRepoRepositories_Inner - Entered"
 
@@ -165,18 +208,18 @@ function Search-WinRepoRepositories_Inner {
                             Write-Verbose "Search-WinRepoRepositories_Inner - `$logItem.Result: $logItem.Result"
 
                             $ra = @()
-                            $ra += $logItem.Result    
+                            $ra += $logItem.Result
 
                             $array = @()
                             foreach ($searchResult in $ra) {
-                                if ([System.String]::IsNullOrWhitespace($searchResult.appName)) { 
+                                if ([System.String]::IsNullOrWhitespace($searchResult.appName)) {
                                     $logItem.Result.Remove($searchResult);
-                                    continue 
+                                    continue
                                 }
 
                                 $isValid = $searchResult.appId -imatch '\b[a-zA-Z0-9._-]+\b'
-                                if ($isValid) {                                
-                                
+                                if ($isValid) {
+
                                     $item = New-Object PSObject -Property @{
                                         name    = $searchResult.appName.Trim()
                                         id      = $searchResult.appId.Trim()
@@ -189,8 +232,8 @@ function Search-WinRepoRepositories_Inner {
                                 } else {
                                     #$resultArray.Remove($searchResult) | Out-Null
                                 }
-                            }     
-                            
+                            }
+
                             $result = $array;
                         }
                     }

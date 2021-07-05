@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,8 @@ namespace WinRepo.PowerShell
             ServiceHost = builder.Build();
 
             iStartup.ServiceProvider = ServiceHost.Services;
+
+            Ioc.Default.ConfigureServices(ServiceHost.Services);
 
             //Logger.LogDebug($"startup.ServiceProvider: [{iStartup.ServiceProvider}]");
 

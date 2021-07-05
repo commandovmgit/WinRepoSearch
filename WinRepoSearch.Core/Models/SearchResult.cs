@@ -50,7 +50,7 @@ namespace WinRepoSearch.Core.Models
 
             Repo = repo;
 
-            PropertyChanged += SearchResult_PropertyChanged ;
+            PropertyChanged += SearchResult_PropertyChanged;
         }
 
         private void SearchResult_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

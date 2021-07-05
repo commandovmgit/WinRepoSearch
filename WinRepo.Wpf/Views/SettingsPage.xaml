@@ -1,0 +1,63 @@
+﻿<Page
+    x:Class="WinRepo.Wpf.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="clr-namespace:WinRepo.Wpf.Converters" 
+    xmlns:viewmodels="clr-namespace:WinRepoSearch.ViewModels" 
+    d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+    mc:Ignorable="d"
+    Style="{StaticResource PageStyle}">
+    <Page.Resources>
+        <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+    </Page.Resources>
+    <Grid Margin="{StaticResource MediumLeftRightMargin}">
+        <StackPanel
+            x:Name="ContentArea">
+            <TextBlock x:Uid="Settings_Personalization" Style="{DynamicResource SubtitleTextBlockStyle}" />
+            <StackPanel Margin="{StaticResource SmallTopBottomMargin}">
+                <TextBlock x:Uid="Settings_Theme" />
+
+                <StackPanel Margin="{StaticResource XSmallTopMargin}">
+                    <RadioButton
+                        x:Uid="Settings_Theme_Light"
+                        Command="{Binding ViewModel.SwitchThemeCommand}"
+                        IsChecked="{Binding ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
+                        FontSize="15"
+                        GroupName="AppTheme"
+                        CommandParameter="Light">
+                    </RadioButton>
+                    <RadioButton
+                        x:Uid="Settings_Theme_Dark"
+                        Command="{Binding ViewModel.SwitchThemeCommand}"
+                        IsChecked="{Binding ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
+                        FontSize="15"
+                        GroupName="AppTheme"
+                        CommandParameter="Dark">
+                    </RadioButton>
+                    <RadioButton
+                        x:Uid="Settings_Theme_Default"
+                        Command="{Binding ViewModel.SwitchThemeCommand}"
+                        IsChecked="{Binding ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}"
+                        FontSize="15"
+                        GroupName="AppTheme"
+                        CommandParameter="Default">
+                    </RadioButton>
+                </StackPanel>
+            </StackPanel>
+
+            <TextBlock x:Uid="Settings_About" Style="{DynamicResource SubtitleTextBlockStyle}" />
+
+            <StackPanel Margin="{StaticResource XSmallTopMargin}">
+                <TextBlock Text="{Binding ViewModel.VersionDescription, Mode=OneWay}" Style="{DynamicResource BodyTextBlockStyle}" />
+
+                <TextBlock
+                    x:Uid="Settings_AboutDescription"
+                    Margin="{StaticResource XSmallTopMargin}"
+                    Style="{DynamicResource BodyTextBlockStyle}" />
+                <!--<HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" Margin="{StaticResource XSmallTopMargin}" />-->
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>

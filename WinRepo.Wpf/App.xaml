@@ -1,0 +1,30 @@
+﻿<Application x:Class="WinRepo.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WinRepo.Wpf"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/_FontSizes.xaml" />
+                <ResourceDictionary Source="/Styles/_Thickness.xaml" />
+                <ResourceDictionary Source="/Styles/Page.xaml" />
+                <ResourceDictionary Source="/Styles/TextBlock.xaml" />
+                <ResourceDictionary>
+                    <Thickness x:Key="SmallLeftMargin" Left="2" Top="0" Right="0" Bottom="0"/>
+                    <SolidColorBrush x:Key="ListBoxBorderThemeBrush" Color="Gray"/>
+                    <SolidColorBrush x:Key="ApplicationPageBackgroundThemeBrush" Color="White"/>
+                    <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource AccentBrush}" />
+                    <Style x:Key="ListTitleStyle" TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="24" />
+                        <Setter Property="FontWeight" Value="Bold"/>
+                    </Style>
+                    <Style x:Key="ListSubtitleStyle" TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="16" />
+                        <Setter Property="FontWeight" Value="Bold"/>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>            
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

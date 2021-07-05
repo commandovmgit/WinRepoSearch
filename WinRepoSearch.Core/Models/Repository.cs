@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json.Linq;
@@ -26,6 +28,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using WinRepoSearch.ViewModels;
+
 namespace WinRepoSearch.Core.Models
 {
     // Remove this class once your pages/features are using your data.
@@ -35,13 +39,36 @@ namespace WinRepoSearch.Core.Models
     {
         public Repository()
         {
+            try
+            {
+                ServiceProvider = Ioc.Default.GetService<IServiceProvider>();
+                Logger = ServiceProvider.GetRequiredService<ILogger<Repository>>();
+            }
+            catch (Exception ex)
+            {
+                // Ignore
+                Logger.LogError(ex, "Error getting service provider.");
+            }
+
+            try
+            {
+                Logger.LogDebug($"Runspace.CanUseDefaultRunspace: {Runspace.CanUseDefaultRunspace}");
+
+                LocalRunspace = Runspace.CanUseDefaultRunspace
+                    ? Runspace.DefaultRunspace
+                    : CreateLocalRunspace();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error creating Runspace.");
+            }
         }
 
-        public string RepositoryId { get; init; }
-        public string RepositoryName { get; init; }
+        public string? RepositoryId { get; init; }
+        public string? RepositoryName { get; init; }
 
         [Key]
-        public string Key => RepositoryId;
+        public string Key => RepositoryId ?? "";
 
         public string? Website { get; init; }
 
@@ -75,8 +102,9 @@ namespace WinRepoSearch.Core.Models
         public string? AppAfterVersionColumn { get; private set; }
         public ILogger<Repository> Logger { get; set; }
         public IServiceProvider ServiceProvider { get; set; }
+        public Runspace LocalRunspace { get; private set; }
 
-        private LogItem ParseDetails(string[] log, SearchResult searchResult)
+        public LogItem ParseDetails(string[] log, SearchResult searchResult)
         {
             searchResult.PublisherName = FindLine(log, InfoPublisherHeader);
             searchResult.AppDescription = FindLine(log, InfoDescriptionHeader);
@@ -85,28 +113,28 @@ namespace WinRepoSearch.Core.Models
 
             return LogItem.Empty;
 
-            static string ParseLines(string[] log, (int start, int end, int index) parameters)
-            {
-                if (parameters.start > -1 && parameters.end == -1)
-                {
-                    StringBuilder line = new();
-                    for (int i = parameters.start; i < log.Length; ++i)
-                    {
-                        if (i == parameters.start)
-                        {
-                            line.AppendLine(log[i].Substring(parameters.index).Trim());
-                        }
-                        else
-                        {
-                            line.AppendLine(log[i].Trim());
-                        }
-                    }
+            //static string ParseLines(string[] log, (int start, int end, int index) parameters)
+            //{
+            //    if (parameters.start > -1 && parameters.end == -1)
+            //    {
+            //        StringBuilder line = new();
+            //        for (int i = parameters.start; i < log.Length; ++i)
+            //        {
+            //            if (i == parameters.start)
+            //            {
+            //                line.AppendLine(log[i].Substring(parameters.index).Trim());
+            //            }
+            //            else
+            //            {
+            //                line.AppendLine(log[i].Trim());
+            //            }
+            //        }
 
-                    return line.ToString();
-                }
+            //        return line.ToString();
+            //    }
 
-                return string.Empty;
-            }
+            //    return string.Empty;
+            //}
         }
 
         private string? FindNotes(string[] log, string? header)
@@ -157,6 +185,22 @@ namespace WinRepoSearch.Core.Models
         internal Task<LogItem> Install(SearchResult result)
             => ExecuteCommand(Command, InstallCmd, result);
 
+        const string infoScript = @"$module = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\WinRepo.psm1'
+
+. 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\Assemblies.ps1'
+
+Remove-Module $module -ErrorAction SilentlyContinue
+Import-Module $module
+
+$result = Get-WinRepoRepositories -Query {1} -Repo '{0}' -Verbose
+
+$count = $result.Length;
+
+Write-Verbose ""`$result.Length: $count""
+
+Write-Output $result
+";
+
         const string searchScript = @"$module = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\WinRepo.psm1'
 
 . 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\Assemblies.ps1'
@@ -164,7 +208,6 @@ namespace WinRepoSearch.Core.Models
 Remove-Module $module -ErrorAction SilentlyContinue
 Import-Module $module
 
-# Assertion
 $result = Search-WinRepoRepositories -Query {1} -Repo '{0}' -Verbose
 
 $count = $result.Length;
@@ -209,72 +252,13 @@ Write-Output $result
 
             try
             {
-                Logger.LogDebug($"Runspace.CanUseDefaultRunspace: {Runspace.CanUseDefaultRunspace}");
+                ManualResetEventSlim mr = new ManualResetEventSlim();
 
-                Runspace CreateLocalRunspace()
-                {
-                    Logger.LogDebug($"CreateLocalRunspace: Enter");
-
-                    Runspace? lrs = null;
-
-                    try
-                    {
-                        var ci = Runspace.DefaultRunspace?.ConnectionInfo
-                            ?? Runspace.DefaultRunspace?.OriginalConnectionInfo;
-
-                        if (ci is not null)
-                        {
-                            Logger.LogDebug($"CreateLocalRunspace: ConnectionInfo: {ci}");
-
-                            lrs = Runspace.GetRunspaces(ci)?.FirstOrDefault();
-                        }
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-
-                    var host = new WinRepoHost(Logger);
-                    lrs ??= RunspaceFactory.CreateRunspace(host);
-
-                    lrs.Name ??= "WinRepo Runspace";
-
-                    Logger.LogDebug($"CreateLocalRunspace: Exit");
-                    return lrs;
-                }
-
-                Runspace? rs;
-                ManualResetEventSlim? mr;
-
-                PowerShell CreatePowerShell()
-                {
-                    var localPs = PowerShell.Create(CreateLocalRunspace());
-                    rs = localPs.Runspace;
-
-                    mr = new ManualResetEventSlim();
-
-                    if (rs.RunspaceStateInfo.State != RunspaceState.Opened)
-                    {
-                        rs.StateChanged += (sender, args) =>
-                        {
-                            if (args.RunspaceStateInfo.State.Equals(RunspaceState.Opened))
-                            {
-                                mr.Set();
-                            }
-                        };
-
-                        rs.Open();
-
-                        mr.Wait(TimeSpan.FromSeconds(60));
-                    }
-
-                    return localPs;
-                }
-
-                newPs = CreatePowerShell();
+                newPs = CreatePowerShell(LocalRunspace, mr);
 
                 var scriptCode = argument switch
                 {
+                    "show" => string.Format(infoScript, RepositoryName, parameter),
                     _ => string.Format(searchScript, RepositoryName, parameter)
                 };
 
@@ -333,20 +317,7 @@ Write-Output $result
                         Logger.LogDebug($"ERROR: {err}");
                     }
 
-                    //ps.Dispose();
-                    //newPs.Dispose();
-
-                    //newPs = CreatePowerShell();
-
-                    //ps = newPs.AddCommand("Invoke-Command")
-                    //    .AddParameter("-NoNewScope")
-                    //    .AddParameter("-Verbose")
-                    //    .AddParameter("-ScriptBlock", script)
-                    //    ;
-
                     Logger.LogDebug($"Invoke-Command -NoNewScope -ScriptBlock {scriptBlock} in {RepositoryName}");
-
-                    //var result = ps.Invoke();
 
                     Logger.LogDebug("Begin Results:");
                     result.ToList().ForEach(r => Logger.LogDebug(r?.ToString() ?? "<null>"));
@@ -371,6 +342,60 @@ Write-Output $result
             }
         }
 
+        private Runspace CreateLocalRunspace()
+        {
+            Logger.LogDebug($"CreateLocalRunspace: Enter");
+
+            Runspace? lrs = null;
+
+            try
+            {
+                var ci = Runspace.DefaultRunspace?.ConnectionInfo
+                    ?? Runspace.DefaultRunspace?.OriginalConnectionInfo;
+
+                if (ci is not null)
+                {
+                    Logger.LogDebug($"CreateLocalRunspace: ConnectionInfo: {ci}");
+
+                    lrs = Runspace.GetRunspaces(ci)?.FirstOrDefault();
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            var host = new WinRepoHost(Logger);
+            lrs ??= RunspaceFactory.CreateRunspace(host);
+
+            lrs.Name ??= "WinRepo Runspace";
+
+            Logger.LogDebug($"CreateLocalRunspace: Exit");
+            return lrs;
+        }
+
+        private PowerShell CreatePowerShell(Runspace rs, ManualResetEventSlim mr)
+        {
+            var localPs = PowerShell.Create(rs);
+
+            if (rs.RunspaceStateInfo.State != RunspaceState.Opened)
+            {
+                rs.StateChanged += (sender, args) =>
+                {
+                    if (args.RunspaceStateInfo.State.Equals(RunspaceState.Opened))
+                    {
+                        mr.Set();
+                    }
+                };
+
+                rs.Open();
+
+                mr.Wait(TimeSpan.FromSeconds(60));
+            }
+
+            return localPs;
+        }
+
         public LogItem CleanAndBuildResult<TParameter>(PSDataCollection<PSObject> result, string? command, TParameter parameter)
         {
             if (result.FirstOrDefault()?.Properties["name"] is null)
@@ -387,7 +412,7 @@ Write-Output $result
 
                 var res = LogItem.Empty;
 
-                foreach(var item in result)
+                foreach (var item in result)
                 {
                     var sr = new SearchResult(item.Properties, this);
                     res._result = res.Result.Append(sr);
@@ -413,7 +438,7 @@ Write-Output $result
                 _ => LogItem.Empty,
             };
 
-        private LogItem BuildInfoResults(string[] log, SearchResult? searchResult)
+        public LogItem BuildInfoResults(string[] log, SearchResult? searchResult)
         {
             _ = searchResult ?? throw new ArgumentNullException(nameof(searchResult));
 

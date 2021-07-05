@@ -1,5 +1,9 @@
+Write-Verbose (Get-Location)
+
 $moduleLocation = (Get-Module 'WinRepo.Powershell').Path `
     ?? '..\WinRepo.PowerShell.dll'
+
+$moduleLocation = Resolve-Path $moduleLocation
 
 Write-Verbose "`$moduleLocation: [$moduleLocation]"
 
@@ -12,30 +16,31 @@ if (-not (Test-Path $moduleLocation)) {
     if (-not $moduleLocation) {
         throw 'Could not locate WinRepo.PowerShell.dll.'
     }
-
-    $bin = [System.IO.Path]::GetDirectoryName($moduleLocation.FullName)
-
-    Write-Host "`$bin: $bin"
-
-    Set-Location $bin
-
-    if (-not (Test-Path $PSScriptRoot\NewAssemblies.ps1)) {
-        $assemblies = Get-Content $PSScriptRoot\Assemblies.ps1
-
-        $newAssemblies = @()
-        $assemblies | ForEach-Object -Process {
-            $assembly = $_.Replace('||PATH||', $bin)
-            $newAssemblies += $assembly
-        }
-
-        $newAssemblies | Out-File -FilePath $PSScriptRoot\NewAssemblies.ps1 -Encoding utf8 -Force
-    }
-
-    . $PSScriptRoot\NewAssemblies.ps1
-
-    Pop-Location
 }
 
+$moduleLocation = (Resolve-Path $moduleLocation).Path
+
+$bin = [System.IO.Path]::GetDirectoryName($moduleLocation)
+
+Write-Verbose "`$bin: $bin"
+
+Set-Location $bin
+
+if (-not (Test-Path $PSScriptRoot\NewAssemblies.ps1)) {
+    $assemblies = Get-Content $PSScriptRoot\Assemblies.ps1
+
+    $newAssemblies = @()
+    $assemblies | ForEach-Object -Process {
+        $assembly = $_.Replace('||PATH||', $bin)
+        $newAssemblies += $assembly
+    }
+
+    $newAssemblies | Out-File -FilePath $PSScriptRoot\NewAssemblies.ps1 -Encoding utf8 -Force
+}
+
+. $PSScriptRoot\NewAssemblies.ps1
+
+Pop-Location
 
 $moduleLoaded = -not (Get-Module WinRepo)
 

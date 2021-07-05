@@ -70,8 +70,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="bin\Debug\net5.0\*.dll" Pack="true" PackagePath="/" />
-		<Content Include="bin\Debug\net5.0\*.pdb" Pack="true" PackagePath="/" />
 		<Content Include="images\WinRepo-small.png" Pack="true" PackagePath="/" />
 		<Content Include="images\WinRepo.png" Pack="true" PackagePath="/" PackageIcon="./Images/WinRepo-small.png" />
 	</ItemGroup>

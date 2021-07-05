@@ -16,7 +16,7 @@ namespace WinRepoSearch.Core.Services
 {
     public class SearchService : ISearchService
     {
-        public ImmutableArray<Repository> Repositories { get; } = new();
+        public Repositories Repositories { get; } = new Repositories();
         public static SearchService? Instance { get; private set; }
         public ILogger<SearchService> Logger { get; }
 
@@ -33,34 +33,40 @@ namespace WinRepoSearch.Core.Services
 
             var filename = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "Repos.yaml");
 
-            if (File.Exists(filename))
+            try
             {
-                Logger.LogDebug($"SearchService.ctor(): Reading: {filename}");
-                Logger.LogDebug(File.ReadAllText(filename));
-
-                var des = new DeserializerBuilder().Build();
-
-                var repos = des.Deserialize<Repositories>(new StringReader(File.ReadAllText(filename)));
-                Logger.LogDebug($"SearchService.ctor(): repos: {repos?.ToString() ?? "<null>"}");
-
-                if (repos is not null)
+                if (File.Exists(filename))
                 {
-                    repos.ToList().ForEach(r =>
-                    {
-                        r.Logger = serviceProvider.GetService<ILogger<Repository>>()!;
-                        r.ServiceProvider = serviceProvider.GetService<IStartup>()!.ServiceProvider ?? serviceProvider;
-                    });
-                    Repositories = repos.ToImmutableArray();
-                }
+                    Logger.LogDebug($"SearchService.ctor(): Reading: {filename}");
+                    Logger.LogDebug(File.ReadAllText(filename));
 
-                Logger.LogDebug($"SearchService.ctor(): repos: {repos?.Count ?? -1}");
-                Logger.LogDebug($"SearchService.ctor(): Repositories: {Repositories.Count()}");
+                    var des = new DeserializerBuilder().Build();
+
+                    var repos = des.Deserialize<Repositories>(new StringReader(File.ReadAllText(filename)));
+                    Logger.LogDebug($"SearchService.ctor(): repos: {repos?.ToString() ?? "<null>"}");
+
+                    if (repos is not null)
+                    {
+                        Repositories = repos;
+                    }
+
+                    Logger.LogDebug($"SearchService.ctor(): repos: {repos?.Count ?? -1}");
+                    Logger.LogDebug($"SearchService.ctor(): Repositories: {Repositories.Count()}");
+                }
+                else
+                {
+                    Logger.LogError($"SearchService.ctor(): File node found: {filename}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.LogError($"SearchService.ctor(): File node found: {filename}");
+                Logger.LogError(ex, $"Could not load YAML from {filename}");
+                throw;
             }
-            Logger.LogDebug("SearchService.ctor(): Exit");
+            finally
+            {
+                Logger.LogDebug("SearchService.ctor(): Exit");
+            }
         }
 
         public async IAsyncEnumerable<LogItem> PerformSearchAsync(SearchViewModel? viewModel)

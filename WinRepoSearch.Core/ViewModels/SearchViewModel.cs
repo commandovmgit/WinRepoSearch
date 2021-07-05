@@ -27,6 +27,7 @@ namespace WinRepoSearch.ViewModels
         private ObservableCollection<Repository>? _repositories;
         private bool isEmpty = true;
         private bool isBusy;
+        private string _status;
 
         public bool IsBusy
         {
@@ -38,12 +39,14 @@ namespace WinRepoSearch.ViewModels
         {
             _bag.Add(caller);
             IsBusy = true;
+            Status = "Working...";
         }
 
         public void Done([CallerMemberName] string caller = "unknown")
         {
             _bag.TryTake(out _);
             IsBusy = _bag.Any();
+            Status = IsBusy ? "Working..." : "Done.";
         }
 
         public SearchResult? Selected
@@ -64,7 +67,8 @@ namespace WinRepoSearch.ViewModels
             set => SetProperty(ref _searchTerm, value);
         }
 
-        public ObservableCollection<Repository> Repositories => _repositories ??= new(_searchService.Repositories);
+        public ObservableCollection<Repository> Repositories => _repositories 
+            ??= new(_searchService.Repositories);
 
         public ObservableCollection<InnerItem> Log { get; } = new();
 
@@ -81,11 +85,12 @@ namespace WinRepoSearch.ViewModels
         public AsyncRelayCommand<SearchViewModel?> PerformSearch
         => new(
             ExecuteSearch,
-            viewModel => !string.IsNullOrWhiteSpace(viewModel?.SearchTerm));
+            viewModel => true);
 
         private Func<SearchViewModel?, Task> ExecuteSearch =>
                         async viewModel =>
                         {
+                            Status = $"Searching for {SearchTerm}";
                             Busy();
                             try
                             {
@@ -95,6 +100,7 @@ namespace WinRepoSearch.ViewModels
                                 var needReset = true;
                                 await foreach (LogItem log in _searchService.PerformSearchAsync(viewModel))
                                 {
+                                    Status = $"Searched {log.Log.FirstOrDefault()}";
                                     if (needReset)
                                     {
                                         Log.Clear();
@@ -114,7 +120,7 @@ namespace WinRepoSearch.ViewModels
                                     }
                                     else
                                     {
-                                        IsEmpty = true;
+                                        IsEmpty = SearchResults.Count == 0;
                                     }
                                 }
 
@@ -123,21 +129,28 @@ namespace WinRepoSearch.ViewModels
                             finally
                             {
                                 Done();
+                                Status = "Done.";
                             }
                         };
 
+        public string Status
+        {
+            get => _status;
+            set => SetProperty(ref _status, value);
+        }
+
         public AsyncRelayCommand<SearchViewModel?> PerformGetInfo
         => new(
-            ExecuteGetInfo,
-            viewModel => !string.IsNullOrWhiteSpace(viewModel?.SearchTerm));
+            async viewModel => await ExecuteGetInfo(viewModel),
+            viewModel => true);
 
         private Func<SearchViewModel?, Task> ExecuteGetInfo =>
-                        viewModel =>
+                        async viewModel =>
                         {
                             try
                             {
                                 Busy();
-                                return _searchService.PerformGetInfoAsync(viewModel);
+                                await _searchService.PerformGetInfoAsync(viewModel);
                             }
                             finally
                             {
@@ -172,11 +185,13 @@ namespace WinRepoSearch.ViewModels
 
         public SearchViewModel(Core.Services.SearchService sampleDataService)
         {
+            Status = "Initializing.";
             _searchService = sampleDataService;
 
             Log.CollectionChanged += Log_CollectionChanged;
 
             SearchResults.CollectionChanged += SearchResults_CollectionChanged  ;
+            Status = "Ready.";
         }
 
         private void SearchResults_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -220,7 +235,7 @@ namespace WinRepoSearch.ViewModels
 
         public async void OnNavigatedTo(object? _)
         {
-            if (SearchResults.Count == 0)
+            if (SearchResults.Count == 0 && !string.IsNullOrWhiteSpace(SearchTerm))
             {
                 await foreach (var (items, log) in _searchService.PerformSearchAsync(this))
                 {

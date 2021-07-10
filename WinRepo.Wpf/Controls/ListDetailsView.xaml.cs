@@ -11,7 +11,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 
 using WinRepo.Wpf.Views;
 
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepo.Wpf.Controls
 {

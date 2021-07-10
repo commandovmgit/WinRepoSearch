@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using WinRepoSearch.Core.Models;
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepoSearch.Core.Contracts.Services
 {

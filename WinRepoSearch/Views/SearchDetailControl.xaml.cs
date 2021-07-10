@@ -1,9 +1,11 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+
 using WinRepoSearch.Core.Models;
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepoSearch.Views
 {

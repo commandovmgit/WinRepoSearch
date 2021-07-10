@@ -1,7 +1,24 @@
 Write-Verbose (Get-Location)
 
 $moduleLocation = (Get-Module 'WinRepo.Powershell').Path `
-    ?? '..\WinRepo.PowerShell.dll'
+    ?? '.\WinRepo.PowerShell.dll'
+
+if(-not (Test-Path $moduleLocation))
+{
+    $moduleLocation = ("." + $moduleLocation)
+    if(-not (Test-Path $moduleLocation))
+    {
+        pushd
+        cd ..
+        $found = gci WinRepo.PowerShell.dll -recurse
+        if($found)
+        {
+            $moduleLocation = $found | select-object -first 1
+        }
+    }
+}
+
+if(-not (Test-Path $moduleLocation)) { throw "Cannot locate WinRepo.PowerShell.dll"}
 
 $moduleLocation = Resolve-Path $moduleLocation
 

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 
 using WinRepoSearch.Core.Models;
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepo.Wpf.Views
 {

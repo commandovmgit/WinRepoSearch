@@ -22,19 +22,28 @@ namespace WinRepo.PowerShell
             => ServiceHost.Services.GetRequiredService<IStartup>();
 
 
+        private static bool _initialized = false;
+
         [ModuleInitializer]
         static public void MyInitializer()
         {
-            //Logger.LogDebug("Initializing Host.");
+            if (_initialized) return;
+
+            _initialized = true;
 
             var builder = CreateHostBuilder();
             ServiceHost = builder.Build();
 
             iStartup.ServiceProvider = ServiceHost.Services;
 
-            Ioc.Default.ConfigureServices(ServiceHost.Services);
-
-            //Logger.LogDebug($"startup.ServiceProvider: [{iStartup.ServiceProvider}]");
+            try
+            {
+                Ioc.Default.ConfigureServices(ServiceHost.Services);
+            }
+            catch
+            {
+                // Ignore.
+            }
 
             ServiceHost.RunAsync();
         }

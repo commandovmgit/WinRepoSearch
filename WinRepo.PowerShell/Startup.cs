@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Models;
 using WinRepoSearch.Core.Services;
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepo.PowerShell
 {

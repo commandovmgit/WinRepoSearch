@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Models;
-using WinRepoSearch.ViewModels;
 using YamlDotNet.Serialization;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepoSearch.Core.Services
 {
@@ -73,21 +73,22 @@ namespace WinRepoSearch.Core.Services
         {
             _ = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
 
-            Logger.LogDebug($"{viewModel.Repositories.Count} repos in viewModel.");
 
-            foreach (var repo in viewModel.Repositories.Where(r => r.IsEnabled))
-            {
-                Logger.LogDebug($"Searching {repo.RepositoryName} for {viewModel.SearchTerm}");
+                Logger.LogDebug($"{viewModel.Repositories.Count} repos in viewModel.");
 
-                var result = await repo.Search(viewModel.SearchTerm);
-
-                if (result is not null)
+                foreach (var repo in viewModel.Repositories.Where(r => r.IsEnabled))
                 {
-                    Logger.LogDebug($"Found {result.Result.Count()} results in {repo.RepositoryName}.");
-                    yield return result;
+                    Logger.LogDebug($"Searching {repo.RepositoryName} for {viewModel.SearchTerm}");
+
+                    var result = await repo.Search(viewModel.SearchTerm);
+
+                    if (result is not null)
+                    {
+                        Logger.LogDebug($"Found {result.Result.Count()} results in {repo.RepositoryName}.");
+                        yield return result;
+                    }
                 }
-            }
-        }
+       }
 
         public async Task<LogItem> PerformGetInfoAsync(SearchViewModel? viewModel)
         {

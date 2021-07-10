@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Controls;
 
 using WinRepoSearch.Contracts.Services;
+using WinRepoSearch.Core.ViewModels;
 using WinRepoSearch.ViewModels;
 using WinRepoSearch.Views;
 
@@ -14,12 +15,12 @@ namespace WinRepoSearch.Services
 {
     public class PageService : IPageService
     {
-        private readonly Dictionary<string, Type> _pages = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _pages = new();
 
         public PageService()
         {
-            Configure<SearchViewModel, SearchPage>();
-            Configure<SettingsViewModel, SettingsPage>();
+            Configure<WinRepoSearch.Core.ViewModels.SearchViewModel, SearchPage>();
+            Configure<WinRepoSearch.ViewModels.SettingsViewModel, SettingsPage>();
         }
 
         public Type GetPageType(string key)

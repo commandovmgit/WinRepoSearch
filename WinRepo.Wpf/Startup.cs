@@ -6,6 +6,7 @@ using WinRepo.Wpf.Views;
 
 using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Services;
+using WinRepoSearch.Core.ViewModels;
 using WinRepoSearch.ViewModels;
 
 // To learn more about WinUI3, see: https://docs.microsoft.com/windows/apps/winui/winui3/.

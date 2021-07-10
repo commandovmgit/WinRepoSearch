@@ -34,7 +34,7 @@
             -->
             <NavigationViewItem x:Uid="Shell_Search" 
                                 Icon="Document" 
-                                helpers:NavHelper.NavigateTo="WinRepoSearch.ViewModels.SearchViewModel" />
+                                helpers:NavHelper.NavigateTo="WinRepoSearch.Core.ViewModels.SearchViewModel" />
         </NavigationView.MenuItems>
         <NavigationView.HeaderTemplate>
             <DataTemplate>

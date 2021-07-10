@@ -19,7 +19,7 @@ using WinRepo.PowerShell;
 
 using WinRepoSearch.Core;
 using WinRepoSearch.Core.Services;
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepoConsole
 {

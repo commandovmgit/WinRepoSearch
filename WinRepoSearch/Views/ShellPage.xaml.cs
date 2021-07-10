@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Windows.System;
 
 using WinRepoSearch.Contracts.Services;
+using WinRepoSearch.Core.ViewModels;
 using WinRepoSearch.ViewModels;
 
 namespace WinRepoSearch.Views

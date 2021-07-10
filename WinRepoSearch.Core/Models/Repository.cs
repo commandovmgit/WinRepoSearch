@@ -28,8 +28,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using WinRepoSearch.ViewModels;
-
 namespace WinRepoSearch.Core.Models
 {
     // Remove this class once your pages/features are using your data.
@@ -185,14 +183,17 @@ namespace WinRepoSearch.Core.Models
         internal Task<LogItem> Install(SearchResult result)
             => ExecuteCommand(Command, InstallCmd, result);
 
-        const string infoScript = @"$module = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\WinRepo.psm1'
+        const string infoScript = @"
+Set-Location '{2}'
 
-. 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\Assemblies.ps1'
+$module = '{2}\Scripts\WinRepo.psm1'
+
+. '{2}\Scripts\NewAssemblies.ps1'
 
 Remove-Module $module -ErrorAction SilentlyContinue
 Import-Module $module
 
-$result = Get-WinRepoRepositories -Query {1} -Repo '{0}' -Verbose
+$result = Get-WinRepoRepositories -Query '{1}' -Repo '{0}' -Verbose
 
 $count = $result.Length;
 
@@ -201,14 +202,17 @@ Write-Verbose ""`$result.Length: $count""
 Write-Output $result
 ";
 
-        const string searchScript = @"$module = 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\WinRepo.psm1'
+        const string searchScript = @"
+Set-Location '{2}'
 
-. 'C:\GitHub\WinRepoSearch\WinRepo.PowerShell\bin\Debug\net5.0\Scripts\Assemblies.ps1'
+$module = '{2}\Scripts\WinRepo.psm1'
+
+. '{2}\Scripts\NewAssemblies.ps1'
 
 Remove-Module $module -ErrorAction SilentlyContinue
 Import-Module $module
 
-$result = Search-WinRepoRepositories -Query {1} -Repo '{0}' -Verbose
+$result = Search-WinRepoRepositories -Query '{1}' -Repo '{0}' -Verbose
 
 $count = $result.Length;
 
@@ -252,14 +256,16 @@ Write-Output $result
 
             try
             {
-                ManualResetEventSlim mr = new ManualResetEventSlim();
+                ManualResetEventSlim mr = new ();
 
                 newPs = CreatePowerShell(LocalRunspace, mr);
 
+                var path = Path.GetDirectoryName(GetType().Assembly.Location);
+
                 var scriptCode = argument switch
                 {
-                    "show" => string.Format(infoScript, RepositoryName, parameter),
-                    _ => string.Format(searchScript, RepositoryName, parameter)
+                    "show" => string.Format(infoScript, RepositoryName, searchTerm, path),
+                    _ => string.Format(searchScript, RepositoryName, searchTerm, path)
                 };
 
                 Logger.LogDebug(scriptCode);
@@ -326,7 +332,7 @@ Write-Output $result
                     ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r?.ToString() ?? "<null>"));
                     Logger.LogDebug("End Error:");
 
-                    var res = CleanAndBuildResult(result, command, parameter);
+                    var res = CleanAndBuildResult(result, argument, parameter);
                     return Task.FromResult(res);
                 }
             }
@@ -402,7 +408,10 @@ Write-Output $result
             {
                 Logger.LogDebug("CleanAndBuildResult: Creating new results from strings.");
                 var log = result.Select(i => i?.ToString() ?? "<null>").ToArray();
-                var res = BuildSearchResults(log, parameter?.ToString());
+                var res = command?.ToLower() switch { 
+                    "show" or "info" => BuildInfoResults(log, parameter as SearchResult),
+                    _ => BuildSearchResults(log, parameter?.ToString())
+                };
                 Logger.LogDebug($"CleanAndBuildResult: Returning: res.Result.Count(): {res.Result.Count()}");
                 return res;
             }
@@ -442,7 +451,7 @@ Write-Output $result
         {
             _ = searchResult ?? throw new ArgumentNullException(nameof(searchResult));
 
-            switch (searchResult.Repo.RepositoryName.ToLowerInvariant())
+            switch (searchResult.Repo.RepositoryName?.ToLowerInvariant())
             {
                 case "winget":
                     if (log.FirstOrDefault()?
@@ -467,7 +476,7 @@ Write-Output $result
 
         private LogItem BuildSearchResults(string[] log, string? searchTerm)
         {
-            List<SearchResult> result = new List<SearchResult>();
+            List<SearchResult> result = new();
 
             var nameIndex = GetIndex(log, AppNameColumn);
             var idIndex = GetIndex(log, AppIdColumn);

@@ -34,7 +34,7 @@ namespace WinRepoSearch.Core.Models
         public override ConsoleColor BackgroundColor { get => Console.BackgroundColor; set => Console.BackgroundColor = value; }
         public override Size BufferSize
         {
-            get => new Size(Console.BufferWidth, Console.BufferHeight);
+            get => new(Console.BufferWidth, Console.BufferHeight);
             set
             {
                 var (width, height) = (value.Width, value.Height);
@@ -45,7 +45,7 @@ namespace WinRepoSearch.Core.Models
         }
         public override Coordinates CursorPosition
         {
-            get => new Coordinates(Console.CursorLeft, Console.CursorTop);
+            get => new(Console.CursorLeft, Console.CursorTop);
             set
             {
                 var (left, top) = (value.X, value.Y);
@@ -59,13 +59,13 @@ namespace WinRepoSearch.Core.Models
 
         public override bool KeyAvailable => Console.KeyAvailable;
 
-        public override Size MaxPhysicalWindowSize => new Size(Console.LargestWindowWidth, Console.LargestWindowHeight);
+        public override Size MaxPhysicalWindowSize => new(Console.LargestWindowWidth, Console.LargestWindowHeight);
 
         public override Size MaxWindowSize => MaxPhysicalWindowSize;
 
         public override Coordinates WindowPosition
         {
-            get => new Coordinates(Console.WindowLeft, Console.WindowTop);
+            get => new(Console.WindowLeft, Console.WindowTop);
             set
             {
                 var (left, top) = (value.X, value.Y);
@@ -76,7 +76,7 @@ namespace WinRepoSearch.Core.Models
         }
         public override Size WindowSize
         {
-            get => new Size(Console.WindowWidth, Console.WindowHeight);
+            get => new(Console.WindowWidth, Console.WindowHeight);
             set
             {
                 var (width, height) = (value.Width, value.Height);

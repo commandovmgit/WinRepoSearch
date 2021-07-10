@@ -7,6 +7,7 @@ using WinRepoSearch.Activation;
 using WinRepoSearch.Contracts.Services;
 using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Services;
+using WinRepoSearch.Core.ViewModels;
 using WinRepoSearch.Services;
 using WinRepoSearch.ViewModels;
 using WinRepoSearch.Views;

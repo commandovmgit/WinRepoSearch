@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.19041</TargetFramework>
+    <TargetFramework>net5.0-windows10.0.19041</TargetFramework>
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <RootNamespace>WinRepoSearch</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -53,6 +53,7 @@
     <PRIResource Include="Strings\en-us\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WinRepo.PowerShell\WinRepo.PowerShell.csproj" />
     <ProjectReference Include="..\WinRepoSearch.Core\WinRepoSearch.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

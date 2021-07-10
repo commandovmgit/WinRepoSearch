@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Navigation;
 
 using WinRepoSearch.Contracts.Services;
+using WinRepoSearch.Core.ViewModels;
 using WinRepoSearch.Views;
 
 namespace WinRepoSearch.ViewModels

@@ -2,7 +2,7 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepo.Wpf.Views
 {

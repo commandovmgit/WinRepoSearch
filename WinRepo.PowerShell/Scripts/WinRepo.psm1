@@ -125,6 +125,8 @@ function Search-WinRepoRepositories {
 
     Write-Verbose "`$initialized: $initialized"
 
+    if(-not $initialized) { throw "`$initialized is `$null." }
+
     $r = Search-WinRepoRepositories_Inner -init:$initialized -Query:$Query -Repo:$Repo
 
     if ($r.Count -eq 0) {

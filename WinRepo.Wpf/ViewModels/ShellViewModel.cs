@@ -1,6 +1,8 @@
 ﻿
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using WinRepoSearch.Core.ViewModels;
+
 namespace WinRepoSearch.ViewModels
 {
     public class ShellViewModel : ObservableRecipient

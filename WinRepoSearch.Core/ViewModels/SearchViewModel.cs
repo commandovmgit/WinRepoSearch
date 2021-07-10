@@ -7,18 +7,20 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
+using Microsoft.Extensions.Logging;
+
 using WinRepoSearch.Contracts.ViewModels;
-using WinRepoSearch.Core;
-using WinRepoSearch.Core.Contracts.Services;
 using WinRepoSearch.Core.Models;
 
-namespace WinRepoSearch.ViewModels
+namespace WinRepoSearch.Core.ViewModels
 {
     public class SearchViewModel : ObservableRecipient, INavigationAware
     {
-        private readonly Core.Services.SearchService _searchService;
+        private readonly Services.SearchService _searchService;
         private readonly ConcurrentBag<string> _bag = new();
         private SearchResult? _selected;
         private ObservableCollection<SearchResult> _searchResults
@@ -31,7 +33,7 @@ namespace WinRepoSearch.ViewModels
 
         public bool IsBusy
         {
-            get => isBusy; 
+            get => isBusy;
             set => SetProperty(ref isBusy, value);
         }
 
@@ -67,7 +69,7 @@ namespace WinRepoSearch.ViewModels
             set => SetProperty(ref _searchTerm, value);
         }
 
-        public ObservableCollection<Repository> Repositories => _repositories 
+        public ObservableCollection<Repository> Repositories => _repositories
             ??= new(_searchService.Repositories);
 
         public ObservableCollection<InnerItem> Log { get; } = new();
@@ -183,20 +185,23 @@ namespace WinRepoSearch.ViewModels
         public Commands Command { get; set; }
         public bool IsVerbose { get; set; }
 
-        public SearchViewModel(Core.Services.SearchService sampleDataService)
+        public ILogger Logger { get; }
+
+        public SearchViewModel(Services.SearchService sampleDataService, ILogger<SearchViewModel> logger)
         {
+            Logger = logger;
             Status = "Initializing.";
             _searchService = sampleDataService;
 
             Log.CollectionChanged += Log_CollectionChanged;
 
-            SearchResults.CollectionChanged += SearchResults_CollectionChanged  ;
+            SearchResults.CollectionChanged += SearchResults_CollectionChanged;
             Status = "Ready.";
         }
 
         private void SearchResults_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            switch(e.Action)
+            switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
                     var newItem = e.NewItems?.Cast<SearchResult>().FirstOrDefault();
@@ -237,10 +242,17 @@ namespace WinRepoSearch.ViewModels
         {
             if (SearchResults.Count == 0 && !string.IsNullOrWhiteSpace(SearchTerm))
             {
-                await foreach (var (items, log) in _searchService.PerformSearchAsync(this))
+                try
                 {
-                    items?.ToList().ForEach(SearchResults.Add);
-                    log?.ToList().ForEach(Log.Add);
+                    await foreach (var (items, log) in _searchService.PerformSearchAsync(this))
+                    {
+                        items?.ToList().ForEach(SearchResults.Add);
+                        log?.ToList().ForEach(Log.Add);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error performing search.");
                 }
             }
         }

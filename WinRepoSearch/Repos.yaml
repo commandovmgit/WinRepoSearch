@@ -5,10 +5,10 @@
   SupportEmail: opencode@microsoft.com
   SupportChat: null
   Notes: null
-  SearchCmd: "search {0}"
-  InstallCmd: install {0}"
-  ListCmd: "list {0}"
-  InfoCmd: "show {0}"
+  SearchCmd: "search '{0}'"
+  InstallCmd: install '{0}'"
+  ListCmd: "list '{0}'"
+  InfoCmd: "show '{0}'"
   AppNameColumn: Name
   AppIdColumn: Id
   AppVersionColumn: Version
@@ -25,10 +25,10 @@
   SupportEmail: null
   SupportChat: null
   Notes: null
-  SearchCmd: "search {0}"
-  InstallCmd: "install {0} -y"
-  ListCmd: "list {0}"
-  InfoCmd: "info {0}"
+  SearchCmd: "search '{0}'"
+  InstallCmd: "install '{0}' -y"
+  ListCmd: "list '{0}'"
+  InfoCmd: "info '{0}'"
   AppNameRegex: ^\s*([^\s]*)
   AppIdRegex: ^\s*([^\s]*)
   AppVersionRegex: ^\s*[^\s]*\s([^\s]*)

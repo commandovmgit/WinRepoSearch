@@ -44,14 +44,14 @@ namespace WinRepoSearch.Core.Models
 
             try
             {
-                COORD coord = new COORD();
-                SMALL_RECT rc = new SMALL_RECT();
+                COORD coord = new();
+                SMALL_RECT rc = new();
                 rc.Left = x;
                 rc.Top = y;
                 rc.Right = (short)(x + width - 1);
                 rc.Bottom = (short)(y + height - 1);
 
-                COORD size = new COORD();
+                COORD size = new();
                 size.X = width;
                 size.Y = height;
 
@@ -65,7 +65,7 @@ namespace WinRepoSearch.Core.Models
                 IntPtr ptr = buffer;
                 for (int h = 0; h < height; h++)
                 {
-                    StringBuilder sb = new StringBuilder();
+                    StringBuilder sb = new();
                     for (int w = 0; w < width; w++)
                     {
                         CHAR_INFO ci = (CHAR_INFO)Marshal.PtrToStructure(ptr, typeof(CHAR_INFO));

@@ -8,13 +8,13 @@
   IgnorableNamespaces="uap rescap genTemplate">
 
   <Identity
-    Name="784A22BD-98EB-499E-855B-737EFC87FB8E"
-    Publisher="CN=kingd"
+    Name="62695TheSharpNinja.WinRepoSearch"
+    Publisher="CN=GatewayProgrammingSchool"
     Version="1.0.0.0" />
 
   <Properties>
-    <DisplayName>WinRepoSearch (Package)</DisplayName>
-    <PublisherDisplayName>kingd</PublisherDisplayName>
+    <DisplayName>WinRepo Search</DisplayName>
+    <PublisherDisplayName>The Sharp Ninja</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinRepo.PowerShell": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\WindowsApps\\Microsoft.PowerShell_7.1.3.0_x64__8wekyb3d8bbwe\\pwsh.exe",
+      "commandLineArgs": "-noe -c \"&{Import-Module 'C:\\GitHub\\WinRepoSearch\\WinRepo.PowerShell\\bin\\Debug\\net5.0\\WinRepo.PowerShell.dll'; }\"",
+      "nativeDebugging": true
+    }
+  }
+}

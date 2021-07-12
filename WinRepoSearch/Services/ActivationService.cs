@@ -35,6 +35,8 @@ namespace WinRepoSearch.Services
             // take into account that the splash screen is shown while this code runs.
             await InitializeAsync();
 
+            if (App.MainWindow is null) return;
+
             if (App.MainWindow.Content == null)
             {
                 _shell = Ioc.Default.GetService<ShellPage>();

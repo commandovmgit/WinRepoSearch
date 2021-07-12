@@ -1,0 +1,93 @@
+﻿<UserControl x:Class="WinRepo.Wpf.Controls.ListDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views1="clr-namespace:WinRepo.Wpf.Views"
+             xmlns:models="using:WinRepoSearch.Core.Models"
+             mc:Ignorable="d" 
+             x:Name="Self"
+             DataContext="{Binding ElementName=Self}"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <DataTemplate x:Key="NoSelectionContentTemplate">
+            <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+                <views1:LogControl ViewModel="{Binding ElementName=SP, Path=ViewModel}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ListHeaderTemplate">
+            <Grid Height="40">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource ListTitleStyle}"
+                    Text="{Binding}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="MinimalListHeaderTemplate">
+            <Grid Height="40">
+                <TextBlock
+                    Margin="96,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource ListTitleStyle}"
+                    Text="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <ListView x:Name="List"
+                  ItemsSource="{Binding Path=SearchResults, Mode=OneWay}"
+                  SelectedItem="{Binding Path=Selected, Mode=TwoWay}"
+                  BorderBrush="Black"
+                  DataContext="{Binding ElementName=Self, Path=DataContext}"
+                  BorderThickness="0,0,1,0"
+                  Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
+                  Grid.Column="0">
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="models:SearchResult">
+                    <Border BorderThickness="0, 0, 0, 1" 
+                    BorderBrush="Black" 
+                    Margin="2,2,2,8">
+                        <Grid Height="Auto">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    FontSize="32"
+                        FontFamily="Segoe UI 2"
+                    Text="{Binding Symbol}"
+                    AutomationProperties.Name="{Binding SymbolName}" />
+                            <StackPanel
+                    Grid.Column="1"
+                    Margin="2,0,0,0"
+                    VerticalAlignment="Top">
+                                <TextBlock>
+                            <TextBlock Style="{DynamicResource ListTitleStyle}" Text="{Binding AppName}" Foreground="Green"/>
+                             (<TextBlock Style="{DynamicResource ListSubTitleStyle}" Text="{Binding AppId}" FontStyle="Italic" />)
+                        </TextBlock>
+                                <TextBlock Style="{DynamicResource ListSubTitleStyle}">
+                            <Run Text="{Binding AppVersion}" FontWeight="Bold"/>
+                            <Run Text="•" Foreground="{DynamicResource AccentBrush}"/>
+                            Repo: <Run Text="{Binding Repo.RepositoryName}" FontWeight="Bold"/>
+                                </TextBlock>
+                                <TextBlock>
+                            <Run Text="{Binding PublisherName}"/> Website
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Frame x:Name="Details"     
+               Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
+               Grid.Column="1"/>
+    </Grid>
+</UserControl>

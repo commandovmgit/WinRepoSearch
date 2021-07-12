@@ -1,13 +1,31 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Newtonsoft.Json.Linq;
+
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Management.Automation;
+using System.Management.Automation.Host;
+using System.Management.Automation.Runspaces;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WinRepoSearch.Core.Models
@@ -17,13 +35,38 @@ namespace WinRepoSearch.Core.Models
     // It is the model class we use to display data on pages like Grid, Chart, and ListDetails.
     public record Repository
     {
-        public Repository() { }
+        public Repository()
+        {
+            try
+            {
+                ServiceProvider = Ioc.Default.GetService<IServiceProvider>();
+                Logger = ServiceProvider.GetRequiredService<ILogger<Repository>>();
+            }
+            catch (Exception ex)
+            {
+                // Ignore
+                Logger.LogError(ex, "Error getting service provider.");
+            }
 
-        public string RepositoryId { get; init; }
-        public string RepositoryName { get; init; }
+            try
+            {
+                Logger.LogDebug($"Runspace.CanUseDefaultRunspace: {Runspace.CanUseDefaultRunspace}");
+
+                LocalRunspace = Runspace.CanUseDefaultRunspace
+                    ? Runspace.DefaultRunspace
+                    : CreateLocalRunspace();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error creating Runspace.");
+            }
+        }
+
+        public string? RepositoryId { get; init; }
+        public string? RepositoryName { get; init; }
 
         [Key]
-        public string Key => RepositoryId;
+        public string Key => RepositoryId ?? "";
 
         public string? Website { get; init; }
 
@@ -34,6 +77,7 @@ namespace WinRepoSearch.Core.Models
         public string? SupportChat { get; init; }
 
         public string? Notes { get; init; }
+        public string? Command { get; init; }
         public string? SearchCmd { get; init; }
         public string? InstallCmd { get; init; }
         public string? ListCmd { get; init; }
@@ -54,8 +98,11 @@ namespace WinRepoSearch.Core.Models
 
         public bool IsEnabled { get; set; } = true;
         public string? AppAfterVersionColumn { get; private set; }
+        public ILogger<Repository> Logger { get; set; }
+        public IServiceProvider ServiceProvider { get; set; }
+        public Runspace LocalRunspace { get; private set; }
 
-        private LogItem ParseDetails(string[] log, SearchResult searchResult)
+        public LogItem ParseDetails(string[] log, SearchResult searchResult)
         {
             searchResult.PublisherName = FindLine(log, InfoPublisherHeader);
             searchResult.AppDescription = FindLine(log, InfoDescriptionHeader);
@@ -64,28 +111,28 @@ namespace WinRepoSearch.Core.Models
 
             return LogItem.Empty;
 
-            static string ParseLines(string[] log, (int start, int end, int index) parameters)
-            {
-                if (parameters.start > -1 && parameters.end == -1)
-                {
-                    StringBuilder line = new();
-                    for (int i = parameters.start; i < log.Length; ++i)
-                    {
-                        if (i == parameters.start)
-                        {
-                            line.AppendLine(log[i].Substring(parameters.index).Trim());
-                        }
-                        else
-                        {
-                            line.AppendLine(log[i].Trim());
-                        }
-                    }
+            //static string ParseLines(string[] log, (int start, int end, int index) parameters)
+            //{
+            //    if (parameters.start > -1 && parameters.end == -1)
+            //    {
+            //        StringBuilder line = new();
+            //        for (int i = parameters.start; i < log.Length; ++i)
+            //        {
+            //            if (i == parameters.start)
+            //            {
+            //                line.AppendLine(log[i].Substring(parameters.index).Trim());
+            //            }
+            //            else
+            //            {
+            //                line.AppendLine(log[i].Trim());
+            //            }
+            //        }
 
-                    return line.ToString();
-                }
+            //        return line.ToString();
+            //    }
 
-                return string.Empty;
-            }
+            //    return string.Empty;
+            //}
         }
 
         private string? FindNotes(string[] log, string? header)
@@ -102,7 +149,7 @@ namespace WinRepoSearch.Core.Models
                     enabled = true;
                 }
 
-                if(enabled)
+                if (enabled)
                 {
                     sb.AppendLine(line);
                 }
@@ -115,7 +162,7 @@ namespace WinRepoSearch.Core.Models
         {
             if (string.IsNullOrWhiteSpace(header)) return null;
 
-            foreach(var line in log)
+            foreach (var line in log)
             {
                 if (line.StartsWith(header))
                 {
@@ -126,24 +173,62 @@ namespace WinRepoSearch.Core.Models
             return null;
         }
 
-        internal System.Threading.Tasks.Task<LogItem> Search(string searchTerm)
-        {
-            if (!IsEnabled)
-            {
-                return System.Threading.Tasks.Task.FromResult<LogItem> (LogItem.Empty);
-            }
+        internal Task<LogItem> Search(string searchTerm) => !IsEnabled
+                ? Task.FromResult(LogItem.Empty)
+                : ExecuteCommand(Command, SearchCmd, searchTerm);
 
-            return ExecuteCommand(SearchCmd, searchTerm);
-        }
+        internal Task<LogItem> GetInfo(SearchResult result)
+            => ExecuteCommand(Command, InfoCmd, result);
 
-        internal System.Threading.Tasks.Task<LogItem> GetInfo(SearchResult result)
-            => ExecuteCommand(InfoCmd, result);
+        internal Task<LogItem> Install(SearchResult result)
+            => ExecuteCommand(Command, InstallCmd, result);
 
-        private async System.Threading.Tasks.Task<LogItem> ExecuteCommand<TParameter>(string? command, TParameter parameter)
+        const string infoScript = @"
+Set-Location '{2}'
+
+$module = '{2}\Scripts\WinRepo.psm1'
+
+. '{2}\Scripts\NewAssemblies.ps1'
+
+Remove-Module $module -ErrorAction SilentlyContinue
+Import-Module $module
+
+$result = Get-WinRepoRepositories -Query '{1}' -Repo '{0}' -Verbose
+
+$count = $result.Length;
+
+Write-Verbose ""`$result.Length: $count""
+
+Write-Output $result
+";
+
+        const string searchScript = @"
+Set-Location '{2}'
+
+$module = '{2}\Scripts\WinRepo.psm1'
+
+. '{2}\Scripts\NewAssemblies.ps1'
+
+Remove-Module $module -ErrorAction SilentlyContinue
+Import-Module $module
+
+$result = Search-WinRepoRepositories -Query '{1}' -Repo '{0}' -Verbose
+
+$count = $result.Length;
+
+Write-Verbose ""`$result.Length: $count""
+
+Write-Output $result
+";
+
+        private Task<LogItem> ExecuteCommand<TParameter>(string? command, string? argument, TParameter parameter, int timeout = 0)
         {
             _ = command ?? throw new ArgumentNullException(nameof(command));
+            _ = argument ?? throw new ArgumentNullException(nameof(argument));
 
-            string[] array;
+            argument = argument.Split(' ').FirstOrDefault();
+
+            Logger.LogDebug($"Preparing Execute({command},{argument},{parameter}) in {RepositoryName}");
 
             var searchTerm = string.Empty;
 
@@ -151,72 +236,227 @@ namespace WinRepoSearch.Core.Models
             {
                 if (string.IsNullOrEmpty(strParameter))
                 {
-                    return LogItem.Empty;
+                    Logger.LogDebug($"Leaving {command}({parameter}) in {RepositoryName} because parameter is an empty string.");
+                    return Task.FromResult(LogItem.Empty);
                 }
 
                 searchTerm = strParameter;
             }
-            else if(parameter is SearchResult result)
+            else if (parameter is SearchResult result)
             {
                 searchTerm = result.AppId;
             }
 
-            var processInfo = new ProcessStartInfo("powershell.exe", string.Format(command, searchTerm))
-            {
-                CreateNoWindow = true,
-                LoadUserProfile = true,
-                RedirectStandardOutput = true
-            };
+            Logger.LogDebug($"searchTerm: {searchTerm}");
+
+            var isScript = command.EndsWith(".psm1", StringComparison.OrdinalIgnoreCase);
+
+            PowerShell? newPs = null;
+            ScriptBlock? scriptBlock = null;
 
             try
             {
-                var process = Process.Start(processInfo)!;
+                ManualResetEventSlim mr = new ();
 
-                if (Task.WaitAny(new[] { process.WaitForExitAsync() }, TimeSpan.FromSeconds(30)) != -1)
+                newPs = CreatePowerShell(LocalRunspace, mr);
+
+                var path = Path.GetDirectoryName(GetType().Assembly.Location);
+
+                var scriptCode = argument switch
                 {
-                    var results = await process.StandardOutput.ReadToEndAsync();
+                    "show" => string.Format(infoScript, RepositoryName, searchTerm, path),
+                    _ => string.Format(searchScript, RepositoryName, searchTerm, path)
+                };
 
-                    results = new Regex(@"^[^a-zA-Z0-9]*(?=[a-zA-Z0-9_.\-])").Replace(results, "").Trim();
+                Logger.LogDebug(scriptCode);
 
-                    array = results.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                scriptBlock = ScriptBlock.Create(scriptCode);
 
-                    return BuildResults(command, parameter, array);
+                var ps = newPs
+                    .AddStatement()
+                    .AddCommand("Invoke-Command")
+                    .AddParameter("-NoNewScope")
+                    .AddParameter("-Verbose")
+                    .AddParameter("-ScriptBlock", scriptBlock)
+                    ;
+
+
+                Logger.LogDebug("*** Before Invoke ***");
+
+                var asyncState = ps.BeginInvoke();
+
+                if (timeout > 0)
+                {
+                    asyncState.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(timeout));
+                }
+                else
+                {
+                    asyncState.AsyncWaitHandle.WaitOne();
                 }
 
-                return LogItem.Empty;
+                if (!asyncState.IsCompleted)
+                {
+                    Debug.Write("Force Stop...");
+                    ps.Stop();
+                    Debug.Write($"{asyncState.IsCompleted}");
+                }
+
+                var errors = ps.Streams.Error.ToList();
+                if (errors.Count > 0)
+                {
+
+                    foreach (var error in errors)
+                    {
+                        Logger.LogError(error.ToString());
+                    }
+
+                    return Task.FromException<LogItem>(new AggregateException(errors.Select(e => e.Exception)));
+                }
+                else
+                {
+                    var result = ps.EndInvoke(asyncState);
+
+                    Logger.LogDebug("After Invoke");
+
+                    foreach (var err in ps.Streams.Error)
+                    {
+                        Logger.LogDebug($"ERROR: {err}");
+                    }
+
+                    Logger.LogDebug($"Invoke-Command -NoNewScope -ScriptBlock {scriptBlock} in {RepositoryName}");
+
+                    Logger.LogDebug("Begin Results:");
+                    result.ToList().ForEach(r => Logger.LogDebug(r?.ToString() ?? "<null>"));
+                    Logger.LogDebug("End Results:");
+                    Logger.LogDebug("Begin Error:");
+                    ps.Streams.Error.ToList().ForEach(r => Logger.LogError(r?.ToString() ?? "<null>"));
+                    Logger.LogDebug("End Error:");
+
+                    var res = CleanAndBuildResult(result, argument, parameter);
+                    return Task.FromResult(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Error in Execute({scriptBlock}) in {RepositoryName}");
+                throw;
+            }
+            finally
+            {
+                Logger.LogDebug($"Leaving Execute(Invoke-Command -NoNewScope -ScriptBlock {scriptBlock}) in {RepositoryName}");
+                newPs?.Dispose();
+            }
+        }
+
+        private Runspace CreateLocalRunspace()
+        {
+            Logger.LogDebug($"CreateLocalRunspace: Enter");
+
+            Runspace? lrs = null;
+
+            try
+            {
+                var ci = Runspace.DefaultRunspace?.ConnectionInfo
+                    ?? Runspace.DefaultRunspace?.OriginalConnectionInfo;
+
+                if (ci is not null)
+                {
+                    Logger.LogDebug($"CreateLocalRunspace: ConnectionInfo: {ci}");
+
+                    lrs = Runspace.GetRunspaces(ci)?.FirstOrDefault();
+                }
             }
             catch
             {
-                throw;
-            }            
+                // ignore
+            }
+
+            var host = new WinRepoHost(Logger);
+            lrs ??= RunspaceFactory.CreateRunspace(host);
+
+            lrs.Name ??= "WinRepo Runspace";
+
+            Logger.LogDebug($"CreateLocalRunspace: Exit");
+            return lrs;
+        }
+
+        private PowerShell CreatePowerShell(Runspace rs, ManualResetEventSlim mr)
+        {
+            var localPs = PowerShell.Create(rs);
+
+            if (rs.RunspaceStateInfo.State != RunspaceState.Opened)
+            {
+                rs.StateChanged += (sender, args) =>
+                {
+                    if (args.RunspaceStateInfo.State.Equals(RunspaceState.Opened))
+                    {
+                        mr.Set();
+                    }
+                };
+
+                rs.Open();
+
+                mr.Wait(TimeSpan.FromSeconds(60));
+            }
+
+            return localPs;
+        }
+
+        public LogItem CleanAndBuildResult<TParameter>(PSDataCollection<PSObject> result, string? command, TParameter parameter)
+        {
+            if (result.FirstOrDefault()?.Properties["name"] is null)
+            {
+                Logger.LogDebug("CleanAndBuildResult: Creating new results from strings.");
+                var log = result.Select(i => i?.ToString() ?? "<null>").ToArray();
+                var res = command?.ToLower() switch { 
+                    "show" or "info" => BuildInfoResults(log, parameter as SearchResult),
+                    _ => BuildSearchResults(log, parameter?.ToString())
+                };
+                Logger.LogDebug($"CleanAndBuildResult: Returning: res.Result.Count(): {res.Result.Count()}");
+                return res;
+            }
+            else
+            {
+                Logger.LogDebug("CleanAndBuildResult: Creating new results from PSObjects.");
+
+                var res = LogItem.Empty;
+
+                foreach (var item in result)
+                {
+                    var sr = new SearchResult(item.Properties, this);
+                    res._result = res.Result.Append(sr);
+                }
+
+                Logger.LogDebug($"CleanAndBuildResult: Returning: res.Result.Count(): {res.Result.Count()}");
+                return res;
+            }
+        }
+
+        private void Runspace_StateChanged(object? sender, System.Management.Automation.Runspaces.RunspaceStateEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private LogItem BuildResults<TParameter>(string command, TParameter parameter, string[] log)
-        {
-            switch (command.Split(' ')[1])
+            => command
+                .Split(' ')
+                .LastOrDefault() switch
             {
-                case "search":
-                    return BuildSearchResults(log, parameter as string);
+                "search" => BuildSearchResults(log, parameter as string),
+                "info" or "show" => BuildInfoResults(log, parameter as SearchResult),
+                _ => LogItem.Empty,
+            };
 
-                case "info":
-                case "show":
-                    return BuildInfoResults(log, parameter as SearchResult);
-
-            }
-
-            return LogItem.Empty;
-        }
-
-        private LogItem BuildInfoResults(string[] log, SearchResult? searchResult)
+        public LogItem BuildInfoResults(string[] log, SearchResult? searchResult)
         {
             _ = searchResult ?? throw new ArgumentNullException(nameof(searchResult));
 
-            switch(searchResult.Repo.RepositoryName.ToLowerInvariant())
+            switch (searchResult.Repo.RepositoryName?.ToLowerInvariant())
             {
                 case "winget":
-                    if(log.FirstOrDefault()?
+                    if (log.FirstOrDefault()?
                         .Equals(
-                            "No package found matching input criteria.", 
+                            "No package found matching input criteria.",
                             StringComparison.OrdinalIgnoreCase) ?? true)
                     {
                         return LogItem.Empty;
@@ -235,8 +475,8 @@ namespace WinRepoSearch.Core.Models
         }
 
         private LogItem BuildSearchResults(string[] log, string? searchTerm)
-        { 
-            List<SearchResult> result = new List<SearchResult>();
+        {
+            List<SearchResult> result = new();
 
             var nameIndex = GetIndex(log, AppNameColumn);
             var idIndex = GetIndex(log, AppIdColumn);
@@ -249,7 +489,7 @@ namespace WinRepoSearch.Core.Models
 
             foreach (var line in log)
             {
-                Debug.WriteLine(line);
+                Logger.LogDebug(line);
 
                 try
                 {
@@ -264,16 +504,26 @@ namespace WinRepoSearch.Core.Models
                         : appName;
 
                     var appVersion = (versionIndex > -1
-                        ? line[versionIndex..Math.Min(afterVersionIndex,line.Length)]
+                        ? line[versionIndex..Math.Min(afterVersionIndex, line.Length)]
                         : versionRegex.Match(line).Groups.Values.LastOrDefault()?.Value ?? line).Trim();
 
                     if (appName == new string('-', appName.Length) ||
                         appName.Equals(AppNameColumn) ||
                         appVersion.StartsWith("v") ||
                         line.IndexOf("bucket:", StringComparison.OrdinalIgnoreCase) > -1 ||
-                        line.EndsWith("packages found.", StringComparison.OrdinalIgnoreCase)) continue;
+                        line.EndsWith("packages found.", StringComparison.OrdinalIgnoreCase) ||
+                        line.EndsWith("does not exist.", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
 
-                    if (string.IsNullOrWhiteSpace(appName) && string.IsNullOrEmpty(appId)) continue;
+                    if (line.StartsWith("Did you know") ||
+                        line.StartsWith("No package found matching input criteria.")) break;
+
+                    if (string.IsNullOrWhiteSpace(appName) && string.IsNullOrEmpty(appId))
+                    {
+                        continue;
+                    }
 
                     var item = new SearchResult(line, this)
                     {
@@ -282,8 +532,8 @@ namespace WinRepoSearch.Core.Models
                         AppVersion = appVersion,
                     };
 
-                    if (!string.IsNullOrEmpty(item.AppName) &&
-                        !string.IsNullOrEmpty(item.AppVersion))
+                    if (!string.IsNullOrEmpty(item.AppName.Trim()) &&
+                        !string.IsNullOrEmpty(item.AppVersion.Trim()))
                     {
                         result.Add(item);
                     }
@@ -294,7 +544,11 @@ namespace WinRepoSearch.Core.Models
                 }
             }
 
-            return new LogItem(result, log.Select(l => new InnerItem(DateTimeOffset.Now, l)).ToArray());
+            var innerItems = log.Select(l => new InnerItem(DateTimeOffset.Now, l)).ToArray();
+
+            var res = new LogItem(result, innerItems);
+
+            return res;
         }
 
         private int GetIndex(string[] log, string? appColumn)

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "WinRepoConsole": {
+      "commandName": "Project",
+      "commandLineArgs": "search -q blazor -r WinGet",
+      "nativeDebugging": true
+    }
+  }
+}

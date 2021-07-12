@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 
 using WinRepoSearch.Contracts.Services;
-using WinRepoSearch.ViewModels;
+using WinRepoSearch.Core.ViewModels;
 
 namespace WinRepoSearch.Activation
 {

@@ -29,7 +29,7 @@
   <PropertyGroup>
     <ProjectGuid>5837DAD3-16D2-4FDF-9973-E66484400A4B</ProjectGuid>
     <TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <AssetTargetFallback>net5.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
@@ -66,13 +66,14 @@
     </PRIResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WinRepoConsole\WinRepoConsole.csproj" />
     <ProjectReference Include="..\WinRepoSearch\WinRepoSearch.csproj">
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
       <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.0-preview">
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.0">
       <IncludeAssets>build</IncludeAssets>
     </PackageReference>
   </ItemGroup>

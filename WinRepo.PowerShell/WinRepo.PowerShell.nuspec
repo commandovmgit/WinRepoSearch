@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>GPS.WinRepo</id>
+    <version>1.0.0</version>
+    <authors>The Sharp Ninja</authors>
+    <owners>Gateway Programming School, Inc.</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Search across WinGet, Scoop and Chocolatey simultaneously.</description>
+    <icon>WinRepo-small.png</icon>
+    <projectUrl>https://github.com/gatewayprogrammingschool/WinRepoSearch</projectUrl>
+    <license type="file">LICENSE.md</license>
+    <repository type="git" url="https://github.com/gatewayprogrammingschool/WinRepoSearch.git" branch="main" />
+    <tags>WinGet Scoop Chocolatey Automation</tags>
+  </metadata>
+  <files>
+    <file src="bin\Debug\net5.0\CommunityToolkit.Mvvm.dll" target="CommunityToolkit.Mvvm.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.ApplicationInsights.dll" target="Microsoft.ApplicationInsights.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.Abstractions.dll" target="Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.Binder.dll" target="Microsoft.Extensions.Configuration.Binder.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.CommandLine.dll" target="Microsoft.Extensions.Configuration.CommandLine.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.dll" target="Microsoft.Extensions.Configuration.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" target="Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.FileExtensions.dll" target="Microsoft.Extensions.Configuration.FileExtensions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.Json.dll" target="Microsoft.Extensions.Configuration.Json.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Configuration.UserSecrets.dll" target="Microsoft.Extensions.Configuration.UserSecrets.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll" target="Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.DependencyInjection.dll" target="Microsoft.Extensions.DependencyInjection.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.FileProviders.Abstractions.dll" target="Microsoft.Extensions.FileProviders.Abstractions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.FileProviders.Physical.dll" target="Microsoft.Extensions.FileProviders.Physical.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.FileSystemGlobbing.dll" target="Microsoft.Extensions.FileSystemGlobbing.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Hosting.Abstractions.dll" target="Microsoft.Extensions.Hosting.Abstractions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Hosting.dll" target="Microsoft.Extensions.Hosting.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.Abstractions.dll" target="Microsoft.Extensions.Logging.Abstractions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.Configuration.dll" target="Microsoft.Extensions.Logging.Configuration.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.Console.dll" target="Microsoft.Extensions.Logging.Console.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.Debug.dll" target="Microsoft.Extensions.Logging.Debug.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.dll" target="Microsoft.Extensions.Logging.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.EventLog.dll" target="Microsoft.Extensions.Logging.EventLog.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Logging.EventSource.dll" target="Microsoft.Extensions.Logging.EventSource.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll" target="Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Options.dll" target="Microsoft.Extensions.Options.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Extensions.Primitives.dll" target="Microsoft.Extensions.Primitives.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Win32.Registry.AccessControl.dll" target="Microsoft.Win32.Registry.AccessControl.dll" />
+    <file src="bin\Debug\net5.0\Microsoft.Win32.SystemEvents.dll" target="Microsoft.Win32.SystemEvents.dll" />
+    <file src="bin\Debug\net5.0\Newtonsoft.Json.dll" target="Newtonsoft.Json.dll" />
+    <file src="bin\Debug\net5.0\System.CodeDom.dll" target="System.CodeDom.dll" />
+    <file src="bin\Debug\net5.0\System.Configuration.ConfigurationManager.dll" target="System.Configuration.ConfigurationManager.dll" />
+    <file src="bin\Debug\net5.0\System.Diagnostics.EventLog.dll" target="System.Diagnostics.EventLog.dll" />
+    <file src="bin\Debug\net5.0\System.DirectoryServices.dll" target="System.DirectoryServices.dll" />
+    <file src="bin\Debug\net5.0\System.Drawing.Common.dll" target="System.Drawing.Common.dll" />
+    <file src="bin\Debug\net5.0\System.Management.dll" target="System.Management.dll" />
+    <file src="bin\Debug\net5.0\System.Security.Cryptography.Pkcs.dll" target="System.Security.Cryptography.Pkcs.dll" />
+    <file src="bin\Debug\net5.0\System.Security.Cryptography.ProtectedData.dll" target="System.Security.Cryptography.ProtectedData.dll" />
+    <file src="bin\Debug\net5.0\System.Security.Permissions.dll" target="System.Security.Permissions.dll" />
+    <file src="bin\Debug\net5.0\System.Windows.Extensions.dll" target="System.Windows.Extensions.dll" />
+    <file src="bin\Debug\net5.0\WinRepo.PowerShell.dll" target="WinRepo.PowerShell.dll" />
+    <file src="bin\Debug\net5.0\WinRepo.PowerShell.pdb" target="WinRepo.PowerShell.pdb" />
+    <file src="bin\Debug\net5.0\WinRepoSearch.Core.dll" target="WinRepoSearch.Core.dll" />
+    <file src="bin\Debug\net5.0\WinRepoSearch.Core.pdb" target="WinRepoSearch.Core.pdb" />
+    <file src="bin\Debug\net5.0\YamlDotNet.dll" target="YamlDotNet.dll" />
+    <file src="images\WinRepo-small.png" target="WinRepo-small.png" />
+    <file src="images\WinRepo.png" target="WinRepo.png" />
+    <file src="LICENSE.md" target="" />
+    <file src="Scripts\Assemblies.ps1" target="Scripts\Assemblies.ps1" />
+    <file src="Scripts\Common.ps1" target="Scripts\Common.ps1" />
+    <file src="Scripts\WinRepo.psd1" target="WinRepo.psd1" />
+    <file src="Scripts\WinRepo.psm1" target="Scripts\WinRepo.psm1" />
+  </files>
+</package>

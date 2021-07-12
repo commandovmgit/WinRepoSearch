@@ -1,0 +1,115 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"launch": {
+		"configurations": [
+			{
+				"name": "Search-WinRepoRepositories -R All -Q vscode",
+				"type": "PowerShell",
+				"request": "launch",
+				"script": "${workspaceFolder}/WinRepo.PowerShell/test-scripts/Test-Search_All_vscode.ps1",
+				"cwd": "${workspaceFolder}/WinRepo.PowerShell/test-scripts",
+				"preLaunchTask": "build-powershell"
+			},
+			{
+				"name": "PowerShell Attach Interactive Session Runspace",
+				"type": "PowerShell",
+				"request": "attach",
+				"processId": "current"
+			},
+			{
+				"name": "PowerShell Launch Current File",
+				"type": "PowerShell",
+				"request": "launch",
+				"script": "${file}",
+				"cwd": "${file}"
+			},
+			{
+				"name": ".NET Core Launch (console)",
+				"type": "coreclr",
+				"request": "launch",
+				"preLaunchTask": "build-solution",
+				"program": "${workspaceFolder}/WinRepoConsole/bin/Debug/net5.0-windows/WinRepoConsole.exe",
+				// "args": [
+				// 	"run",
+				// 	"--no-build",
+				// 	"${workspaceFolder}/WinRepoConsole/WinRepoConsole.csproj"
+				// ],
+				"cwd": "${workspaceFolder}/WinRepoConsole",
+				"console": "internalConsole",
+				"stopAtEntry": false
+			},
+			{
+				"name": ".NET Core Attach",
+				"type": "coreclr",
+				"request": "attach"
+			}
+		],
+		"compounds": []
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "build-powershell",
+				"command":"powershell",
+				"type": "process",
+				"args": [
+					"-C",
+//					"get-process pwsh* | kill -force; dotnet build ${workspaceFolder}/WinRepo.PowerShell/WinRepo.PowerShell.csproj"
+					"dotnet build ${workspaceFolder}/WinRepo.PowerShell/WinRepo.PowerShell.csproj"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"presentation": {
+					"reveal": "silent"
+				},
+				"problemMatcher": "$msCompile"
+			},
+			{
+				"label": "build-solution",
+				"command":"powershell",
+				"type": "process",
+				"args": [
+					"-C",
+					"dotnet build ${workspaceFolder}/WinRepoSearch.sln"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"presentation": {
+					"reveal": "silent"
+				},
+				"problemMatcher": "$msCompile"
+			},
+			{
+				"label": "build",
+				"command": "dotnet",
+				"type": "shell",
+				"args": [
+					"build",
+					"/property:GenerateFullPaths=true",
+					"/consoleloggerparameters:NoSummary"
+				],
+				"group": "build",
+				"presentation": {
+					"reveal": "silent"
+				},
+				"problemMatcher": "$msCompile"
+			}
+		]
+	},
+	"settings": {
+		"cSpell.words": [
+			"Cmdlet",
+			"Cmdlets",
+			"Repos"
+		]
+	}
+}

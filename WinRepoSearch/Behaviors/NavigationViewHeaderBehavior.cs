@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using System;
+
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -22,13 +24,20 @@ namespace WinRepoSearch.Behaviors
             set { SetValue(DefaultHeaderProperty, value); }
         }
 
-        public static NavigationViewHeaderBehavior Empty => new NavigationViewHeaderBehavior();
+        public static NavigationViewHeaderBehavior Empty => new();
 
         public static readonly DependencyProperty DefaultHeaderProperty = DependencyProperty.Register("DefaultHeader", typeof(object), typeof(NavigationViewHeaderBehavior), new PropertyMetadata(null, (d, e) => _current.UpdateHeader()));
 
         public static NavigationViewHeaderMode GetHeaderMode(Page item)
         {
-            return (NavigationViewHeaderMode)item.GetValue(HeaderModeProperty);
+            try
+            {
+                return (NavigationViewHeaderMode)item.GetValue(HeaderModeProperty);
+            }
+            catch 
+            {
+                return NavigationViewHeaderMode.Never;
+            }
         }
 
         public static void SetHeaderMode(Page item, NavigationViewHeaderMode value)

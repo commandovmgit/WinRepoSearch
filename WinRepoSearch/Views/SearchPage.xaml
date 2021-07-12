@@ -8,11 +8,15 @@
     xmlns:behaviors="using:WinRepoSearch.Behaviors"
     behaviors:NavigationViewHeaderBehavior.HeaderMode="Never"
     xmlns:models="using:WinRepoSearch.Core.Models"
-    xmlns:views="using:WinRepoSearch.Views"
+    xmlns:views="using:WinRepoSearch.Views" 
+    xmlns:converters="using:WinRepoSearch.Converters" 
+    xmlns:viewmodels="using:WinRepoSearch.Core.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:SearchViewModel}"
     mc:Ignorable="d"
     x:Name="SP"
     Style="{StaticResource PageStyle}">
     <Page.Resources>
+        <converters:MustBeSearchResultConverter x:Key="MustBeSearchResultConverter"/>
         <DataTemplate x:Key="ItemTemplate" x:DataType="models:SearchResult">
             <Border BorderThickness="0, 0, 0, 1" 
                     BorderBrush="{ThemeResource ListBoxBorderThemeBrush}" 
@@ -30,6 +34,7 @@
                     AutomationProperties.Name="{x:Bind SymbolName}" />-->
                     <StackPanel
                     Grid.Column="1"
+                    DataContext="{x:Bind}"
                     Margin="{StaticResource SmallLeftMargin}"
                     VerticalAlignment="Top">
                         <RichTextBlock>
@@ -46,7 +51,7 @@
                         <RichTextBlock Margin="8">
                             <Paragraph>
                                 <InlineUIContainer>
-                                    <RichTextBlock Style="{StaticResource ListSubTitleStyle}">
+                                    <RichTextBlock>
                                         <Paragraph>
                                             Version:
                                             <Run Text="{Binding AppVersion}" FontWeight="Bold"/>
@@ -68,9 +73,10 @@
             </Border>
         </DataTemplate>
 
-        <DataTemplate x:Key="DetailsTemplate">
+        <DataTemplate x:Key="DetailsTemplate" x:DataType="models:SearchResult">
             <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                <views:SearchDetailControl ListDetailsMenuItem="{Binding}" />
+                <views:SearchDetailControl ListDetailsMenuItem="{Binding Converter={StaticResource MustBeSearchResultConverter}}" 
+                                           SearchViewModel="{Binding ElementName=SP, Path=ViewModel}" />
             </Grid>
         </DataTemplate>
 

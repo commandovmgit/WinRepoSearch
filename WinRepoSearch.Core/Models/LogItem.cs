@@ -5,13 +5,13 @@ namespace WinRepoSearch.Core.Models
 {
     public record LogItem
     {
-        private IEnumerable<SearchResult> _result= Array.Empty<SearchResult>();
+        internal IEnumerable<SearchResult> _result= Array.Empty<SearchResult>();
         private InnerItem[] _log = Array.Empty<InnerItem>();
 
         public IEnumerable<SearchResult> Result { get => _result; init => _result = value; }
         public InnerItem[] Log { get => _log; set => _log = value; }
 
-        public static LogItem Empty => new LogItem(Array.Empty<SearchResult>(), Array.Empty<InnerItem>());
+        public static LogItem Empty => new(Array.Empty<SearchResult>(), Array.Empty<InnerItem>());
 
         public LogItem(IEnumerable<SearchResult> result, InnerItem[] log)
         {

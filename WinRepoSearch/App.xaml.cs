@@ -1,8 +1,7 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using System.IO;
 
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -20,16 +19,16 @@ namespace WinRepoSearch
         private static ILogger<App> _logger;
 
         public static IHost? ServiceHost { get; private set; }
-        public static Window MainWindow 
+        public static Window MainWindow
         {
             get => mainWindow;
             set => mainWindow = value;
         }
 
         public static LaunchActivatedEventArgs? Args { get; private set; }
-        public static IActivationService ActService 
+        public static IActivationService ActService
             => Ioc.Default.GetService<IActivationService>()!;
-        public static ILogger Logger 
+        public static ILogger Logger
             => _logger ??= Ioc.Default.GetService<ILogger<App>>()!;
 
         public static IHostBuilder CreateHostBuilder()
@@ -42,11 +41,14 @@ namespace WinRepoSearch
 
         public App()
         {
+            var dataDirectory = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "Data");
+            dataDirectory = $"\"{dataDirectory}\"";
+            var result = Core.ApplicationSetup.InitPostgresqlAsync(dataDirectory).GetAwaiter().GetResult();
             //AppCenter.Start("1f00432d-26a9-4bd8-86f3-552be7829da0",
             //       typeof(Analytics), typeof(Crashes));
             InitializeComponent();
             UnhandledException += App_UnhandledException;
-            
+
             ServiceHost = CreateHostBuilder().Build();
 
             ServiceHost.Start();

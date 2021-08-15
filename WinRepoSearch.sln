@@ -20,11 +20,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRepo.Wpf", "WinRepo.Wpf\WinRepo.Wpf.csproj", "{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GPS.Postgresql.pg_ctl", "..\..\postresql\GPS.Postgresql\src\GPS.Postgresql.pg_ctl\GPS.Postgresql.pg_ctl.csproj", "{2089D783-B001-4296-BF1E-285C0591118C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		postgresql|Any CPU = postgresql|Any CPU
+		postgresql|x64 = postgresql|x64
+		postgresql|x86 = postgresql|x86
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
@@ -37,6 +42,13 @@ Global
 		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.Debug|x64.Build.0 = Debug|x64
 		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.Debug|x64.Deploy.0 = Debug|x64
 		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.Debug|x86.ActiveCfg = Debug|x86
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|Any CPU.ActiveCfg = postgresql|x86
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|x64.ActiveCfg = postgresql|x64
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|x64.Build.0 = postgresql|x64
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|x64.Deploy.0 = postgresql|x64
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|x86.ActiveCfg = postgresql|x86
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|x86.Build.0 = postgresql|x86
+		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.postgresql|x86.Deploy.0 = postgresql|x86
 		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.Release|Any CPU.ActiveCfg = Release|x64
 		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.Release|Any CPU.Build.0 = Release|x64
 		{5837DAD3-16D2-4FDF-9973-E66484400A4B}.Release|Any CPU.Deploy.0 = Release|x64
@@ -47,6 +59,11 @@ Global
 		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.Debug|x64.ActiveCfg = Debug|x64
 		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.Debug|x64.Build.0 = Debug|x64
 		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.Debug|x86.ActiveCfg = Debug|x86
+		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.postgresql|Any CPU.ActiveCfg = postgresql|x86
+		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.postgresql|x64.ActiveCfg = postgresql|x64
+		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.postgresql|x64.Build.0 = postgresql|x64
+		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.postgresql|x86.ActiveCfg = postgresql|x86
+		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.postgresql|x86.Build.0 = postgresql|x86
 		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.Release|Any CPU.ActiveCfg = Release|x64
 		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.Release|Any CPU.Build.0 = Release|x64
 		{D4BAFF47-5A5A-4051-BC61-980B0D20D64D}.Release|x64.ActiveCfg = Release|x64
@@ -57,6 +74,11 @@ Global
 		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.Debug|x64.Build.0 = Debug|x64
 		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.Debug|x86.ActiveCfg = Debug|x86
 		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.Debug|x86.Build.0 = Debug|x86
+		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.postgresql|Any CPU.ActiveCfg = postgresql|Any CPU
+		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.postgresql|x64.ActiveCfg = postgresql|x64
+		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.postgresql|x64.Build.0 = postgresql|x64
+		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.postgresql|x86.ActiveCfg = postgresql|x86
+		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.postgresql|x86.Build.0 = postgresql|x86
 		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.Release|Any CPU.ActiveCfg = Release|x64
 		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.Release|Any CPU.Build.0 = Release|x64
 		{E0E9728A-4883-48DE-8615-EE173C0D80E4}.Release|x64.ActiveCfg = Release|x64
@@ -68,6 +90,11 @@ Global
 		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.Debug|x64.Build.0 = Debug|Any CPU
 		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.postgresql|Any CPU.ActiveCfg = postgresql|Any CPU
+		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.postgresql|x64.ActiveCfg = postgresql|Any CPU
+		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.postgresql|x64.Build.0 = postgresql|Any CPU
+		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.postgresql|x86.ActiveCfg = postgresql|Any CPU
+		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.postgresql|x86.Build.0 = postgresql|Any CPU
 		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6CE9AF37-3C0C-451A-9635-40B9E055F031}.Release|x64.ActiveCfg = Release|Any CPU
@@ -78,6 +105,11 @@ Global
 		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.Debug|x64.Build.0 = Debug|Any CPU
 		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.Debug|x86.Build.0 = Debug|Any CPU
+		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.postgresql|Any CPU.ActiveCfg = postgresql|Any CPU
+		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.postgresql|x64.ActiveCfg = postgresql|Any CPU
+		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.postgresql|x64.Build.0 = postgresql|Any CPU
+		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.postgresql|x86.ActiveCfg = postgresql|Any CPU
+		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.postgresql|x86.Build.0 = postgresql|Any CPU
 		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{54A6A397-5740-4F6D-8322-9BF6A157B11E}.Release|x64.ActiveCfg = Release|Any CPU
@@ -90,12 +122,35 @@ Global
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Debug|x64.Build.0 = Debug|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Debug|x86.Build.0 = Debug|Any CPU
+		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.postgresql|Any CPU.ActiveCfg = postgresql|Any CPU
+		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.postgresql|x64.ActiveCfg = postgresql|Any CPU
+		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.postgresql|x64.Build.0 = postgresql|Any CPU
+		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.postgresql|x86.ActiveCfg = postgresql|Any CPU
+		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.postgresql|x86.Build.0 = postgresql|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Release|x64.ActiveCfg = Release|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Release|x64.Build.0 = Release|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Release|x86.ActiveCfg = Release|Any CPU
 		{BD3DBFFD-D4BF-42CB-AEB4-BF886B2F0299}.Release|x86.Build.0 = Release|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Debug|x64.Build.0 = Debug|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Debug|x86.Build.0 = Debug|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.postgresql|Any CPU.ActiveCfg = postgresql|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.postgresql|Any CPU.Build.0 = postgresql|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.postgresql|x64.ActiveCfg = postgresql|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.postgresql|x64.Build.0 = postgresql|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.postgresql|x86.ActiveCfg = postgresql|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.postgresql|x86.Build.0 = postgresql|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Release|x64.ActiveCfg = Release|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Release|x64.Build.0 = Release|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Release|x86.ActiveCfg = Release|Any CPU
+		{2089D783-B001-4296-BF1E-285C0591118C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

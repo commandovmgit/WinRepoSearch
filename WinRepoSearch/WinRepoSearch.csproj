@@ -8,6 +8,7 @@
     <Platforms>x86;x64</Platforms>
 	  <UseWinForms>True</UseWinForms>
     <RuntimeIdentifiers>win10-x86;win10-x64</RuntimeIdentifiers>
+    <Configurations>Debug;Release;postgresql</Configurations>
   </PropertyGroup>
 
   <!-- Workaround for https://github.com/dotnet/sdk/issues/17890 -->
@@ -36,15 +37,15 @@
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.0.3" />
     <PackageReference Include="Microsoft.AppCenter.Analytics" Version="4.3.0" />
     <PackageReference Include="Microsoft.AppCenter.Crashes" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0-preview.7.21377.19" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0-preview.7.21377.19" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0-preview.7.21377.19" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0-preview.7.21377.19" />
     <PackageReference Include="Microsoft.PowerShell.Commands.Diagnostics" Version="7.1.3" />
     <PackageReference Include="Microsoft.PowerShell.ConsoleHost" Version="7.1.3" />
     <PackageReference Include="Microsoft.PowerShell.CoreCLR.Eventing" Version="7.1.3" />
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.3" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.0" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.2" />
     <PackageReference Include="Microsoft.WSMan.Runtime" Version="7.1.3" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.4" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
